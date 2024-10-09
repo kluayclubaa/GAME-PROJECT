@@ -13,8 +13,8 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 BUTTON_COLOR = (50, 50, 100)
 HOVER_COLOR = (100, 100, 200)
-background_img = pygame.image.load('back ground/background.png')
-pull_img = pygame.image.load('back ground/gacha.png')
+background_img = pygame.image.load('background/background.png')
+pull_img = pygame.image.load('background/legendary1.png')
 
 # Load the coin image
 coin_img = pygame.image.load('asset/coin.png')  # Path to your coin image
@@ -99,7 +99,7 @@ coin = 5000  # Initial coin value
 
 def draw_code_input_box():
     """Draw the input box for entering a code to add coins."""
-    input_box_rect = pygame.Rect(SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT // 2 - 50, 300, 100)  # Centered input box
+    input_box_rect = pygame.Rect(SCREEN_WIDTH - 500, 70, 300, 100)  # Centered input box
     pygame.draw.rect(screen, (255, 255, 255), input_box_rect, border_radius=10)  # White background
 
     text_prompt = font_coin.render("Enter Code:", True, BLACK)
@@ -111,23 +111,49 @@ def draw_code_input_box():
 
 input_text = ""  # Stores the user's code input
 code_active = False  # Tracks if the input box is currently active
-
 correct_code = "ASIA"  # Define the correct code here
+code_used = False  # Boolean to track if the correct code has been used
+message = ""  # Message to show feedback ("Code used", "Wrong code", etc.)
+message_timer = 0  # Timer for how long the message should be shown
+
 
 def handle_code_entry(event, coin):
-    global input_text, code_active
+    global input_text, code_active, correct_code, code_used, message, message_timer
     if code_active:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:  # Press Enter to submit the code
-                if input_text == correct_code:
+                if input_text == correct_code and not code_used:
                     coin += 1000  # Increase coin by 1000 if the correct code is entered
+                    code_used = correct_code  # Mark the code as used
+                    message = "successfully!"
+                    
+                    message_timer = pygame.time.get_ticks()  # Start the message timer
+                elif code_used:
+                    message = "already used!"  # Inform that the code has been used
+                    message_timer = pygame.time.get_ticks()  # Start the message timer
+                else:
+                    message = "Wrong code!"  # Inform the user the code is wrong
+                    message_timer = pygame.time.get_ticks()  # Start the message timer
+                
                 input_text = ""  # Reset input text after submission
                 code_active = False  # Close the code input box
+
             elif event.key == pygame.K_BACKSPACE:
                 input_text = input_text[:-1]  # Remove last character on backspace
             else:
                 input_text += event.unicode  # Append typed character
     return coin
+def draw_message():
+    """Display a temporary message for a short time after entering a code."""
+    global message, message_timer
+    if message:
+        current_time = pygame.time.get_ticks()
+        if current_time - message_timer < 1000:  # Display the message for 2 seconds
+            text_surface = font_coin.render(message, True, (255, 0, 0))  # Red message
+            screen.blit(text_surface, (SCREEN_WIDTH - 400, 50))
+        else:
+            message = ""  # Clear the message after 2 seconds
+
 
 
 # Main game loop
@@ -186,7 +212,7 @@ while running:
             game_state = HOME
 
     elif game_state == GACHA:
-        screen.blit(pull_img, (0, 0))
+        screen.blit(pull_img, (50, 0))
         draw_coin_box(coin)
         plus_button_rect = draw_coin_box(coin)
         mouse_pos = pygame.mouse.get_pos()
@@ -195,6 +221,8 @@ while running:
         draw_button(Ten_pills_button_rect, "10 Pulls", Ten_pills_button_rect.collidepoint(mouse_pos))
         if code_active:
             draw_code_input_box()
+
+        draw_message()
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_ESCAPE]:
