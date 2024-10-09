@@ -16,21 +16,26 @@ HOVER_COLOR = (100, 100, 200)
 background_img = pygame.image.load('back ground/background.png')
 pull_img = pygame.image.load('back ground/gacha.png')
 
+# Load the coin image
+coin_img = pygame.image.load('asset/coin.png')  # Path to your coin image
+coin_img = pygame.transform.scale(coin_img, (30, 30))  # Resize the coin image if necessary
+
 # Initialize screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Card Game Home Page")
 
 font = pygame.font.Font(pygame.font.match_font('impact'), 60)
+font_coin=pygame.font.Font(pygame.font.match_font('MN Pu Khem'),32)
 
 # Button setup
 button_width, button_height = 400, 50
 battle_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 500, button_width, button_height))
 deck_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 600, button_width, button_height))
 gacha_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 700, button_width, button_height))
-exit_button_rect = pygame.Rect((1300, 600, button_width, button_height))
-pull_button_rect = pygame.Rect((200, 600, button_width, button_height))
+exit_button_rect = pygame.Rect((1300, 800, button_width, button_height))
+pull_button_rect = pygame.Rect((200, 800, button_width, button_height))
 collection_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 800, button_width, button_height))
-Ten_pills_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 600, button_width, button_height))
+Ten_pills_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 800, button_width, button_height))
 
 # Initialize systems
 gacha = GachaSystem()  # Initialize the Gacha system
@@ -41,7 +46,6 @@ ai_battle = AIBattle()  # Initialize the AI Battle system
 # Initialize variables for displaying pulled card result
 pulled_card = None
 pulled_card_time = None
-
 
 # Define card display size
 CARD_WIDTH, CARD_HEIGHT = 200, 300  # Desired card image size
@@ -60,34 +64,76 @@ clock = pygame.time.Clock()
 # Function to draw buttons on the home page
 def draw_button(rect, text, hovered=False):
     color = HOVER_COLOR if hovered else BUTTON_COLOR
-    
-    # Drawing the button with rounded edges (optional)
     pygame.draw.rect(screen, color, rect, border_radius=12)
-    
-    # Adding a space-themed outer glow (optional)
-    if hovered:
-        glow_rect = pygame.Rect(rect.x - 5, rect.y - 5, rect.width + 10, rect.height + 10)
-        pygame.draw.rect(screen, HOVER_COLOR, glow_rect, border_radius=15)
-    
-    # Render and position the text inside the button
     text_render = font.render(text, True, (255, 255, 255))  # White text
-    screen.blit(text_render, (rect.x + (rect.width - text_render.get_width()) // 2, 
-                              rect.y + (rect.height - text_render.get_height()) // 2))
+    screen.blit(text_render, (rect.x + (rect.width - text_render.get_width()) // 2, rect.y + (rect.height - text_render.get_height()) // 2))
+
+def draw_coin_box(coin_amount):
+    """Draw the coin box on the top-right corner of the screen with a + button for adding coins."""
+    # Define the dimensions and layout for the coin box
+    coin_box_rect = pygame.Rect(SCREEN_WIDTH - 400, 20, 150, 40)  # Larger width to fit the '+' button
+    pygame.draw.rect(screen, (220, 220, 220), coin_box_rect, border_radius=20)  # Light background for the coin box
+
+    # Render the coin amount text
+    coin_text = font_coin.render(f"{coin_amount}", True, BLACK)
+    
+    # Position for coin image and coin text
+    screen.blit(coin_img, (SCREEN_WIDTH - 400, 25))  # Position the coin image
+    screen.blit(coin_text, (SCREEN_WIDTH - 370, 12))  # Position the coin amount text
+
+    # Draw the "+" button next to the coin amount
+    plus_button_rect = pygame.Rect(SCREEN_WIDTH - 290, 25, 30, 30)  # Position of the '+' button
+    pygame.draw.rect(screen, (255, 255, 255), plus_button_rect, border_radius=25)  # White rounded button
+    plus_text = font_coin.render("+", True, BLACK)
+    screen.blit(plus_text, (SCREEN_WIDTH - 285, 10))  # Center the "+" sign within the button
+
+    return plus_button_rect  # Return the rect of the '+' button for event detection
 
 def timer(current_time, duration, time):
-    
     if current_time - time < duration:
         return True
     else:
         return False
 
+coin = 5000  # Initial coin value
+
+def draw_code_input_box():
+    """Draw the input box for entering a code to add coins."""
+    input_box_rect = pygame.Rect(SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT // 2 - 50, 300, 100)  # Centered input box
+    pygame.draw.rect(screen, (255, 255, 255), input_box_rect, border_radius=10)  # White background
+
+    text_prompt = font_coin.render("Enter Code:", True, BLACK)
+    screen.blit(text_prompt, (input_box_rect.x + 10, input_box_rect.y + 10))  # Position the prompt text
+    
+    # Code entry text rendering (assuming a variable 'input_text' stores the current input)
+    code_text = font_coin.render(input_text, True, BLACK)
+    screen.blit(code_text, (input_box_rect.x + 10, input_box_rect.y + 50))  # Position the user input
+
+input_text = ""  # Stores the user's code input
+code_active = False  # Tracks if the input box is currently active
+
+correct_code = "ASIA"  # Define the correct code here
+
+def handle_code_entry(event, coin):
+    global input_text, code_active
+    if code_active:
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:  # Press Enter to submit the code
+                if input_text == correct_code:
+                    coin += 1000  # Increase coin by 1000 if the correct code is entered
+                input_text = ""  # Reset input text after submission
+                code_active = False  # Close the code input box
+            elif event.key == pygame.K_BACKSPACE:
+                input_text = input_text[:-1]  # Remove last character on backspace
+            else:
+                input_text += event.unicode  # Append typed character
+    return coin
 
 
 # Main game loop
 running = True
 while running:
     screen.fill(WHITE)
-    
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -105,25 +151,17 @@ while running:
             elif game_state == GACHA:
                 if exit_button_rect.collidepoint(event.pos):
                     game_state = HOME
+                elif plus_button_rect.collidepoint(event.pos):
+                    code_active = True
                 elif pull_button_rect.collidepoint(event.pos):
                     game_state = WHEN_PULLED
-                    # Pull a card
-                    # pulled_card = gacha.pull()
-                    # pulled_card_time = pygame.time.get_ticks()  # Store the current time
-                    # print(f"Pulled card: {pulled_card.name} - Power: {pulled_card.power} - Rarity: {pulled_card.rarity}")
-                    # deck.add_to_deck(pulled_card)  # Add to the deck
-                elif Ten_pills_button_rect.collidepoint(event.pos):
-                    # 10 pills
-                    game_state = WHEN_PULLED
-                    # for _ in range(10):
-                        # pulled_card = gacha.pull()
-                        # pulled_card_time = pygame.time.get_ticks()  # Store the current time
-                        # print(f"Pulled card: {pulled_card.name} - Power: {pulled_card.power} - Rarity: {pulled_card.rarity}")
-                        # deck.add_to_deck(pulled_card)  # Add to the deck
+        coin = handle_code_entry(event, coin)
 
     # Display home screen
     if game_state == HOME:
         screen.blit(background_img, (0, 0))
+        
+
         mouse_pos = pygame.mouse.get_pos()
         draw_button(battle_button_rect, "Battle", battle_button_rect.collidepoint(mouse_pos))
         draw_button(deck_button_rect, "Deck", deck_button_rect.collidepoint(mouse_pos))
@@ -149,28 +187,14 @@ while running:
 
     elif game_state == GACHA:
         screen.blit(pull_img, (0, 0))
+        draw_coin_box(coin)
+        plus_button_rect = draw_coin_box(coin)
         mouse_pos = pygame.mouse.get_pos()
         draw_button(exit_button_rect, "Exit", exit_button_rect.collidepoint(mouse_pos))
         draw_button(pull_button_rect, "Pull", pull_button_rect.collidepoint(mouse_pos))
         draw_button(Ten_pills_button_rect, "10 Pulls", Ten_pills_button_rect.collidepoint(mouse_pos))
-
-        # Display pulled card result for a limited time
-        # if pulled_card is not None and pulled_card_time is not None:
-        #     current_time = pygame.time.get_ticks()
-
-        #     if timer(current_time, 5000, pulled_card_time):
-        #         # Render text and card image
-        #         text = font.render(f"You found a {pulled_card.name}", True, BLACK)
-        #         screen.blit(text, (700, 50))
-
-        #         # Scale the card image to the desired size (CARD_WIDTH, CARD_HEIGHT)
-        #         resized_image = pygame.transform.scale(pulled_card.image, (200, 400))
-        #         screen.blit(resized_image, (SCREEN_WIDTH // 2 - 100, 150))  # Position the resized card image
-
-        #     else:
-        #         # Reset the pulled card display
-        #         pulled_card = None
-        #         pulled_card_time = None
+        if code_active:
+            draw_code_input_box()
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_ESCAPE]:
