@@ -15,6 +15,7 @@ BUTTON_COLOR = (50, 50, 100)
 HOVER_COLOR = (100, 100, 200)
 background_img = pygame.image.load('background/background.png')
 pull_img = pygame.image.load('background/legendary1.png')
+gacha_background=pygame.image.load('gacha background/1.jpg')
 
 # Load the coin image
 coin_img = pygame.image.load('asset/coin.png')  # Path to your coin image
@@ -36,6 +37,7 @@ exit_button_rect = pygame.Rect((1300, 800, button_width, button_height))
 pull_button_rect = pygame.Rect((200, 800, button_width, button_height))
 collection_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 800, button_width, button_height))
 Ten_pills_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 800, button_width, button_height))
+next_button_rect = pygame.Rect((1300,800, button_width, button_height))
 
 # Initialize systems
 gacha = GachaSystem()  # Initialize the Gacha system
@@ -57,6 +59,9 @@ DECK = "deck"
 GACHA = "gacha"
 COLLECTION = "collection"
 WHEN_PULLED = "when_pulled"
+SHOW_STATE="show_State"
+SHOWTEN_STATE="show_ten_State"
+WHENTEN_PULLED="when_ten_pulled"
 game_state = HOME
 
 clock = pygame.time.Clock()
@@ -111,8 +116,8 @@ def draw_code_input_box():
 
 input_text = ""  # Stores the user's code input
 code_active = False  # Tracks if the input box is currently active
-correct_code = "ASIA"  # Define the correct code here
-code_used = False  # Boolean to track if the correct code has been used
+correct_code = ["ASIA","HAM888","DUELSTARIMPACT","HAMXAOMAKKUB"]  # Define the correct code here
+code_used = []  # Boolean to track if the correct code has been used
 message = ""  # Message to show feedback ("Code used", "Wrong code", etc.)
 message_timer = 0  # Timer for how long the message should be shown
 
@@ -122,13 +127,14 @@ def handle_code_entry(event, coin):
     if code_active:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:  # Press Enter to submit the code
-                if input_text == correct_code and not code_used:
+                if input_text in correct_code :
                     coin += 1000  # Increase coin by 1000 if the correct code is entered
-                    code_used = correct_code  # Mark the code as used
+                    code_used.append(input_text)  # Mark the code as used
+                    correct_code.remove(input_text)
                     message = "successfully!"
                     
                     message_timer = pygame.time.get_ticks()  # Start the message timer
-                elif code_used:
+                elif input_text in code_used:
                     message = "already used!"  # Inform that the code has been used
                     message_timer = pygame.time.get_ticks()  # Start the message timer
                 else:
@@ -154,8 +160,10 @@ def draw_message():
         else:
             message = ""  # Clear the message after 2 seconds
 
-
-
+pull_couse=100
+ten_pull_couse=1000
+tenshow=[]
+current_card_index = 0
 # Main game loop
 running = True
 while running:
@@ -179,8 +187,58 @@ while running:
                     game_state = HOME
                 elif plus_button_rect.collidepoint(event.pos):
                     code_active = True
-                elif pull_button_rect.collidepoint(event.pos):
+                elif pull_button_rect.collidepoint(event.pos) and coin>=pull_couse:
+                    pulled_card = gacha.pull()
+                   
+                    game_state = SHOW_STATE
+                    
+                    if pull_button_rect.collidepoint(event.pos):
+                        coin-=100
+                        
+                        
+                elif Ten_pills_button_rect.collidepoint(event.pos) and coin>=ten_pull_couse:
+                    for i in range(10):
+                        pulled_card = gacha.pull()
+                        tenshow.append(pulled_card.show)
+                    game_state = SHOWTEN_STATE
+                    if Ten_pills_button_rect.collidepoint(event.pos):
+                        coin-=1000
+                    
+            elif game_state == WHEN_PULLED:
+                if exit_button_rect.collidepoint(event.pos):
+                    game_state = GACHA
+                elif plus_button_rect.collidepoint(event.pos):
+                    code_active = True
+                elif pull_button_rect.collidepoint(event.pos) and coin>=pull_couse:
+                    pulled_card = gacha.pull()
+                    
+                    game_state = SHOW_STATE
+                    
+                    if pull_button_rect.collidepoint(event.pos):
+                        coin-=100
+                        
+                elif Ten_pills_button_rect.collidepoint(event.pos) and coin>=ten_pull_couse:
+                    for i in range(10):
+                        pulled_card = gacha.pull()
+                        tenshow.append(pulled_card.show)
+                    game_state = SHOWTEN_STATE
+                    if Ten_pills_button_rect.collidepoint(event.pos):
+                        coin-=1000
+            elif game_state == SHOWTEN_STATE:
+                # if next_button_rect.collidepoint(event.pos):
+                #     current_card_index = (current_card_index + 1) 
+                    
+                if event.button == 1:
+                    current_card_index+=1
+                    if current_card_index >= len(tenshow):
+                        game_state = WHEN_PULLED
+            elif game_state== SHOW_STATE:
+                if event.button == 1:
                     game_state = WHEN_PULLED
+           
+                
+            
+
         coin = handle_code_entry(event, coin)
 
     # Display home screen
@@ -234,7 +292,39 @@ while running:
         if keys[pygame.K_ESCAPE]:
             game_state = HOME
     elif game_state == WHEN_PULLED:
-        screen.fill(WHITE)
+        resize_gacha_background=pygame.transform.scale(gacha_background,(SCREEN_WIDTH-150,SCREEN_HEIGHT))
+        screen.blit(resize_gacha_background,(75,0))
+        draw_button(exit_button_rect, "Exit", exit_button_rect.collidepoint(mouse_pos))
+        draw_button(pull_button_rect, "Pull", pull_button_rect.collidepoint(mouse_pos))
+        draw_button(Ten_pills_button_rect, "10 Pulls", Ten_pills_button_rect.collidepoint(mouse_pos))
+        draw_coin_box(coin)
+        if code_active:
+            draw_code_input_box()
+        draw_message()
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_ESCAPE]:
+            game_state = HOME
+
+    elif game_state == SHOW_STATE:
+        resize_show_card=pygame.transform.scale(pulled_card.show,(1550,900))
+        screen.blit(resize_show_card, (180, 0))
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_BACKSPACE]:
+            game_state = WHEN_PULLED
+    elif game_state == SHOWTEN_STATE:
+       
+        if tenshow:
+            resize_show_card=pygame.transform.scale(tenshow[current_card_index],(1550,900))
+        
+            screen.blit(resize_show_card, (180, 0))
+        
+        
+            
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_BACKSPACE]:
+            game_state = WHEN_PULLED
+        
+        
 
     pygame.display.update()
     clock.tick(30)
