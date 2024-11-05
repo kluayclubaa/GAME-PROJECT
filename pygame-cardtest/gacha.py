@@ -17,20 +17,20 @@ class GachaSystem:
     def __init__(self):
         # Define some cards with different rarities, powers, and images
         self.cards = [
-            Card("Kazuma", 3, "Common", "card/Kazuma.jpg",1,1,"showcaracter/Kazuma.png"),
-            Card("Shubaru yamato", 5, "Rare", "card/Shubaru yamato.jpg",2,2,"showcaracter/Shubaru yamato.png"),
-            Card("Rin shirozaki", 5, "Rare", "card/Rin shirozaki.jpg",2,3,"showcaracter/Rin shirozaki.png"),
-            Card("Shizuo Valkyria", 8, "Epic", "card/Shizuo Valkyria.jpg",4,4,"showcaracter/Shizuo Valkyria.png"),
-            Card("Marry Eternalblood", 8, "Epic", "card/Marry Eternalblood.jpg",4,5,"showcaracter/Marry eternalblood.png"),
-            Card("Traisy o' Reapper", 5, "Rare", "card/Traisy o' Reapper.jpg",2,6,"showcaracter/Traisy o' Reapper.png"),
-            Card("Kaguya Hime", 10, "Legendary", "card/Kaguya Hime.jpg",5,7,"showcaracter/Kaguya Hime.png"),
-            Card("Gaia Theyggdrasill", 10, "Legendary", "card/Gaia Theyggdrasill.jpg",5,8,"showcaracter/Gaia Theyggdrasill.png"),
-            Card("Himego Kanade", 10, "Legendary", "card/Himego Kanade.jpg",5,9,"showcaracter/Himego Kanade.png"),
-            Card("Hibaki yamanashi", 10, "Legendary", "card/Hibaki yamanashi.jpg",5,10,"showcaracter/Hibaki yamanashi.png"),
-            Card("Jibrili", 10, "Legendary", "card/Jibril.png",5,11,"showcaracter/Jibril.png"),
+            Card("Kazuma", 3, "Common", "collection/Kazuma.png",1,1,"showcaracter/Kazuma.png"),
+            Card("Shubaru yamato", 5, "Rare", "collection/Shubaru yamato.png",2,2,"showcaracter/Shubaru yamato.png"),
+            Card("Rin shirozaki", 5, "Rare", "collection/Rin shirozaki.png",2,3,"showcaracter/Rin shirozaki.png"),
+            Card("Shizuo Valkyria", 8, "Epic", "collection/Shizuo Valkyria.png",4,4,"showcaracter/Shizuo Valkyria.png"),
+            Card("Marry Eternalblood", 8, "Epic", "collection/Marry Eternalblood.png",4,5,"showcaracter/Marry eternalblood.png"),
+            Card("Traisy o' Reapper", 5, "Rare", "collection/Traisy o' Reapper.png",2,6,"showcaracter/Traisy o' Reapper.png"),
+            Card("Kaguya Hime", 10, "Legendary", "collection/Kaguya Hime.png",5,7,"showcaracter/Kaguya Hime.png"),
+            Card("Gaia Theyggdrasill", 10, "Legendary", "collection/Gaia Theyggdrasill.png",5,8,"showcaracter/Gaia Theyggdrasill.png"),
+            Card("Himego Kanade", 10, "Legendary", "collection/Himego Kanade.png",5,9,"showcaracter/Himego Kanade.png"),
+            Card("Hibaki yamanashi", 10, "Legendary", "collection/Hibaki yamanashi.png",5,10,"showcaracter/Hibaki yamanashi.png"),
+            Card("Jibrili", 10, "Legendary", "collection/Jibril.png",5,11,"showcaracter/Jibril.png"),
             Card("Isuna", 8, "Epic", "card/Isuna.png",4,12,"showcaracter/Isuna.png"),
             Card("Hikari", 10, "Legendary", "card/Hikari.png",5,13,"showcaracter/Hikari.png"),
-            Card("Hibani", 3, "Common", "card/Hibani.png",1,14,"showcaracter/Hibani.png"),
+            Card("Hibani", 3, "Common", "collection/Hibani.png",1,14,"showcaracter/Hibani.png"),
         ]
         self.pull_count = 0
 
@@ -65,4 +65,5 @@ class GachaSystem:
         card_pool = [card for card in self.cards if card.rarity == "Legendary"]
         return random.choice(card_pool)
     
+
 

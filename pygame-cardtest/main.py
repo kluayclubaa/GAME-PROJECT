@@ -11,11 +11,24 @@ pygame.init()
 SCREEN_WIDTH, SCREEN_HEIGHT = 1920, 900
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-BUTTON_COLOR = (50, 50, 100)
+
+BUTTON_COLOR = (200, 0, 0)  # Red color for the buttons.
+
+
+NEXT_COLOR=(200, 70, 70)
+NEXTA_COLOR=(70, 150, 200)
+
+
+NEXT_HOVER_COLOR = (0, 0, 255)  # Blue color
+
 HOVER_COLOR = (100, 100, 200)
-background_img = pygame.image.load('background/background.png')
-pull_img = pygame.image.load('background/legendary1.png')
+card_width = 200
+card_height = 400
+background_img = pygame.image.load('background/bg.png')
+pull_img = pygame.image.load('background/GC.png')
 gacha_background=pygame.image.load('gacha background/1.jpg')
+show_rate=pygame.image.load('gacha background/background.png')
+bg_col=pygame.image.load('colbg/bg.png')
 
 # Load the coin image
 coin_img = pygame.image.load('asset/coin.png')  # Path to your coin image
@@ -37,7 +50,7 @@ exit_button_rect = pygame.Rect((1300, 800, button_width, button_height))
 pull_button_rect = pygame.Rect((200, 800, button_width, button_height))
 collection_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 800, button_width, button_height))
 Ten_pills_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 800, button_width, button_height))
-next_button_rect = pygame.Rect((1300,800, button_width, button_height))
+next_button_rect = pygame.Rect((1550,830, 150, 30))
 
 # Initialize systems
 gacha = GachaSystem()  # Initialize the Gacha system
@@ -62,16 +75,31 @@ WHEN_PULLED = "when_pulled"
 SHOW_STATE="show_State"
 SHOWTEN_STATE="show_ten_State"
 WHENTEN_PULLED="when_ten_pulled"
+COLLECTION2="collection2"
 game_state = HOME
 
 clock = pygame.time.Clock()
 
 # Function to draw buttons on the home page
 def draw_button(rect, text, hovered=False):
-    color = HOVER_COLOR if hovered else BUTTON_COLOR
+    color = NEXTA_COLOR if hovered else NEXT_HOVER_COLOR
     pygame.draw.rect(screen, color, rect, border_radius=12)
     text_render = font.render(text, True, (255, 255, 255))  # White text
     screen.blit(text_render, (rect.x + (rect.width - text_render.get_width()) // 2, rect.y + (rect.height - text_render.get_height()) // 2))
+
+
+
+def drawnext_button(rect, text, r=False):
+    color = BUTTON_COLOR
+    if r:
+        color = NEXT_COLOR
+
+    
+    
+    pygame.draw.rect(screen, color, rect, border_radius=12)
+    text_render = font_coin.render(text, True, (255, 255, 255))  # White text
+    screen.blit(text_render, (rect.x + (rect.width - text_render.get_width()) // 2, rect.y + (rect.height - text_render.get_height()) // 2))
+
 
 def draw_coin_box(coin_amount):
     """Draw the coin box on the top-right corner of the screen with a + button for adding coins."""
@@ -163,8 +191,75 @@ def draw_message():
 pull_couse=100
 ten_pull_couse=1000
 tenshow=[]
+ten_name=[]
 current_card_index = 0
 # Main game loop
+collected_cards = []
+collected_cards2=[]
+def load_collected_cards():
+    global  collected_cards
+
+    try:
+        with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\collection.txt", "r") as file:
+                all_cards = [line.strip() for line in file if line.strip()]
+                
+                collected_cards=all_cards[:10]
+                
+                collected_cards2=all_cards[10:]
+    except FileNotFoundError:
+        print("Collection file not found.")
+    return collected_cards,collected_cards2
+def draw_collection_page(screen, gacha, collected_card_names, bg_col,  page_number):
+    """Draw a single page of the collection"""
+    # Draw background
+    screen.blit(bg_col, (150, 0))
+    
+    # Collection display settings
+    card_width = 200
+    card_height = 350
+    column_x_start = 300
+    row_y_start = 100
+    card_spacing_x = 50
+    card_spacing_y = 50
+    border_thickness = 5
+    inner_padding = 10
+    
+    # Get the cards that match the collected names
+    collected_cards = [card for card in gacha.cards if card.name in collected_card_names]
+    
+    # Draw the cards in a grid
+    for row in range(2):
+        for col in range(5):
+            card_x = column_x_start + col * (card_width + card_spacing_x)
+            card_y = row_y_start + row * (card_height + card_spacing_y)
+            
+            card_index = row * 5 + col
+            if card_index < len(collected_cards):
+                # Draw existing card
+                card = collected_cards[card_index]
+                card_image = pygame.transform.scale(card.image, (card_width, card_height))
+                screen.blit(card_image, (card_x, card_y))
+            else:
+                # Draw empty slot
+                pygame.draw.rect(screen, (200, 255, 255), 
+                               (card_x, card_y, card_width, card_height), 
+                               border_thickness)
+                pygame.draw.rect(screen, (255, 255, 255),
+                               (card_x + inner_padding, 
+                                card_y + inner_padding,
+                                card_width - 2 * inner_padding, 
+                                card_height - 2 * inner_padding))
+    
+    # Draw the navigation button with appropriate text
+    
+def check_if_card_exists(card_name, file_path):
+    """Check if a card name already exists in the collection file"""
+    try:
+        with open(file_path, "r") as file:
+            existing_cards = [line.strip() for line in file]
+            return card_name in existing_cards
+    except FileNotFoundError:
+        return False
 running = True
 while running:
     screen.fill(WHITE)
@@ -187,54 +282,77 @@ while running:
                     game_state = HOME
                 elif plus_button_rect.collidepoint(event.pos):
                     code_active = True
-                elif pull_button_rect.collidepoint(event.pos) and coin>=pull_couse:
+                elif pull_button_rect.collidepoint(event.pos) and coin >= pull_couse:
                     pulled_card = gacha.pull()
-                   
-                    game_state = SHOW_STATE
+                    file_path = "D:/Workspace/GAME-PROJECT/pygame-cardtest/collection.txt"
                     
-                    if pull_button_rect.collidepoint(event.pos):
-                        coin-=100
+                    if not check_if_card_exists(pulled_card.name, file_path):
+                        with open(file_path, "a") as storage_add:
+                            storage_add.write(pulled_card.name + "\n")
+                    
+                    game_state = SHOW_STATE
+                    coin -= 100
                         
-                        
-                elif Ten_pills_button_rect.collidepoint(event.pos) and coin>=ten_pull_couse:
+                elif Ten_pills_button_rect.collidepoint(event.pos) and coin >= ten_pull_couse:
+                    tenshow.clear()  # Clear previous pulls
                     for i in range(10):
                         pulled_card = gacha.pull()
                         tenshow.append(pulled_card.show)
+                        
+                        file_path = "D:/Workspace/GAME-PROJECT/pygame-cardtest/collection.txt"
+                        if not check_if_card_exists(pulled_card.name, file_path):
+                            with open(file_path, "a") as storage_add:
+                                storage_add.write(pulled_card.name + "\n")
+                    
                     game_state = SHOWTEN_STATE
-                    if Ten_pills_button_rect.collidepoint(event.pos):
-                        coin-=1000
+                    coin -= 1000
+                    current_card_index = 0  # Reset card index for new pulls
                     
             elif game_state == WHEN_PULLED:
                 if exit_button_rect.collidepoint(event.pos):
                     game_state = GACHA
                 elif plus_button_rect.collidepoint(event.pos):
                     code_active = True
-                elif pull_button_rect.collidepoint(event.pos) and coin>=pull_couse:
+                elif pull_button_rect.collidepoint(event.pos) and coin >= pull_couse:
                     pulled_card = gacha.pull()
+                    file_path = "D:/Workspace/GAME-PROJECT/pygame-cardtest/collection.txt"
+                    
+                    if not check_if_card_exists(pulled_card.name, file_path):
+                        with open(file_path, "a") as storage_add:
+                            storage_add.write(pulled_card.name + "\n")
                     
                     game_state = SHOW_STATE
-                    
-                    if pull_button_rect.collidepoint(event.pos):
-                        coin-=100
+                    coin -= 100
                         
-                elif Ten_pills_button_rect.collidepoint(event.pos) and coin>=ten_pull_couse:
+                elif Ten_pills_button_rect.collidepoint(event.pos) and coin >= ten_pull_couse:
+                    tenshow.clear()  # Clear previous pulls
                     for i in range(10):
                         pulled_card = gacha.pull()
                         tenshow.append(pulled_card.show)
-                    game_state = SHOWTEN_STATE
-                    if Ten_pills_button_rect.collidepoint(event.pos):
-                        coin-=1000
-            elif game_state == SHOWTEN_STATE:
-                # if next_button_rect.collidepoint(event.pos):
-                #     current_card_index = (current_card_index + 1) 
+                        
+                        file_path = "D:/Workspace/GAME-PROJECT/pygame-cardtest/collection.txt"
+                        if not check_if_card_exists(pulled_card.name, file_path):
+                            with open(file_path, "a") as storage_add:
+                                storage_add.write(pulled_card.name + "\n")
                     
+                    game_state = SHOWTEN_STATE
+                    coin -= 1000
+                    current_card_index = 0  # Reset card index for new pulls
+            
+            elif game_state == SHOWTEN_STATE:
                 if event.button == 1:
-                    current_card_index+=1
+                    current_card_index += 1
                     if current_card_index >= len(tenshow):
                         game_state = WHEN_PULLED
-            elif game_state== SHOW_STATE:
+            elif game_state == SHOW_STATE:
                 if event.button == 1:
                     game_state = WHEN_PULLED
+            elif game_state == COLLECTION:
+                if next_button_rect.collidepoint(event.pos):
+                    game_state = COLLECTION2
+            elif game_state == COLLECTION2:
+                if next_button_rect.collidepoint(event.pos):
+                    game_state = COLLECTION
            
                 
             
@@ -243,7 +361,7 @@ while running:
 
     # Display home screen
     if game_state == HOME:
-        screen.blit(background_img, (0, 0))
+        screen.blit(background_img, (150, 0))
         
 
         mouse_pos = pygame.mouse.get_pos()
@@ -270,7 +388,25 @@ while running:
             game_state = HOME
 
     elif game_state == GACHA:
-        screen.blit(pull_img, (50, 0))
+        screen.blit(pull_img, (150, 0))
+
+
+        
+       
+        
+
+
+
+        show_rate_scaled = pygame.transform.scale(show_rate, (SCREEN_WIDTH-500, SCREEN_HEIGHT-200))
+        show_rate_rect = show_rate_scaled.get_rect(center=(SCREEN_WIDTH//2, 390))
+        
+        screen.blit(show_rate_scaled, show_rate_rect)
+ 
+
+
+
+       
+        
         draw_coin_box(coin)
         plus_button_rect = draw_coin_box(coin)
         mouse_pos = pygame.mouse.get_pos()
@@ -287,10 +423,27 @@ while running:
             game_state = HOME
 
     elif game_state == COLLECTION:
-        screen.fill(WHITE)
+        mouse_pos = pygame.mouse.get_pos()
+
+        collected_cards_page1, collected_cards_page2 = load_collected_cards()
+        draw_collection_page(screen, gacha, collected_cards_page1, bg_col, 
+                        1)
+        drawnext_button(next_button_rect, "next", next_button_rect.collidepoint(mouse_pos))
+    
         keys = pygame.key.get_pressed()
         if keys[pygame.K_ESCAPE]:
-            game_state = HOME
+             game_state = HOME
+    elif game_state == COLLECTION2:
+        mouse_pos = pygame.mouse.get_pos()
+
+        collected_cards_page1, collected_cards_page2 = load_collected_cards()
+        draw_collection_page(screen, gacha, collected_cards_page2, bg_col, 
+                         2)
+        drawnext_button(next_button_rect, "previous", next_button_rect.collidepoint(mouse_pos))
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_ESCAPE]:
+             game_state = HOME
+            
     elif game_state == WHEN_PULLED:
         resize_gacha_background=pygame.transform.scale(gacha_background,(SCREEN_WIDTH-150,SCREEN_HEIGHT))
         screen.blit(resize_gacha_background,(75,0))
@@ -307,6 +460,7 @@ while running:
 
     elif game_state == SHOW_STATE:
         resize_show_card=pygame.transform.scale(pulled_card.show,(1550,900))
+        
         screen.blit(resize_show_card, (180, 0))
         keys = pygame.key.get_pressed()
         if keys[pygame.K_BACKSPACE]:
@@ -317,13 +471,14 @@ while running:
             resize_show_card=pygame.transform.scale(tenshow[current_card_index],(1550,900))
         
             screen.blit(resize_show_card, (180, 0))
-        
-        
-            
+          
+
         keys = pygame.key.get_pressed()
         if keys[pygame.K_BACKSPACE]:
             game_state = WHEN_PULLED
-        
+
+
+    
         
 
     pygame.display.update()
