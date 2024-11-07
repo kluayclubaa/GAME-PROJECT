@@ -387,7 +387,7 @@ while running:
         draw_button(gacha_button_rect, "Gacha", gacha_button_rect.collidepoint(mouse_pos))
         draw_button(collection_button_rect, "Collection", collection_button_rect.collidepoint(mouse_pos))
 
-
+#############################################################################################
     elif game_state == BATTLE:
 
         battle_map = pygame.image.load("C:/Users/Punn/Downloads/battle_map.jpg")
@@ -416,15 +416,11 @@ while running:
             print("round:",round)
             player1_stat.add_card()
             bot_stat.add_card()
-        if len(player1_stat.deck) >= 7:
-            print("pls select card to remove")
-            event.type == pygame.MOUSEBUTTONDOWN
-            mouse_x, mouse_y = event.pos
-            location_in_list_of_clicked_card = click_card(mouse_x,mouse_y)
-            player1_stat.deck_to_tome(location_in_list_of_clicked_card)
+            player1_stat.draw_deck_card(screen)
+            round += 1
 
 
-
+#######################################################################################################
     elif game_state == DECK:
         screen.fill(WHITE)
         text = font.render("Deck Screen - Press ESC to return", True, BLACK)
