@@ -189,6 +189,22 @@ def draw_message():
         else:
             message = ""  # Clear the message after 2 seconds
 
+def click_card(mouse_x,mouse_y):
+            if 450 <= mouse_x <= 570 and 730 <= mouse_y <= 890:
+                return 0
+            elif 600 <= mouse_x <= 720 and 730 <= mouse_y <= 890:
+                return 1
+            elif 750 <= mouse_x <= 870 and 730 <= mouse_y <= 890:
+                return 2
+            elif 900 <= mouse_x <= 1020 and 730 <= mouse_y <= 890:
+                return 3
+            elif 1050 <= mouse_x <= 1170 and 730 <= mouse_y <= 890:
+                return 4
+            elif 1200 <= mouse_x <= 1320 and 730 <= mouse_y <= 890:
+                return 5
+            elif 1350 <= mouse_x <= 1470 and 730 <= mouse_y <= 890:
+                return 6
+
 pull_couse=100
 ten_pull_couse=1000
 tenshow=[]
@@ -201,7 +217,7 @@ def load_collected_cards():
     global  collected_cards
 
     try:
-        with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\collection.txt", "r") as file:
+        with open("C:/Users/Punn/OneDrive/Documents/GitHub/GAME-PROJECT/pygame-cardtest/collection.txt", "r") as file:
                 all_cards = [line.strip() for line in file if line.strip()]
                 
                 collected_cards=all_cards[:10]
@@ -285,7 +301,7 @@ while running:
                     code_active = True
                 elif pull_button_rect.collidepoint(event.pos) and coin >= pull_couse:
                     pulled_card = gacha.pull()
-                    file_path = "D:/Workspace/GAME-PROJECT/pygame-cardtest/collection.txt"
+                    file_path = "C:/Users/Punn/OneDrive/Documents/GitHub/GAME-PROJECT/pygame-cardtest/collection.txt"
                     
                     if not check_if_card_exists(pulled_card.name, file_path):
                         with open(file_path, "a") as storage_add:
@@ -300,7 +316,7 @@ while running:
                         pulled_card = gacha.pull()
                         tenshow.append(pulled_card.show)
                         
-                        file_path = "D:/Workspace/GAME-PROJECT/pygame-cardtest/collection.txt"
+                        file_path = "C:/Users/Punn/OneDrive/Documents/GitHub/GAME-PROJECT/pygame-cardtest/collection.txt"
                         if not check_if_card_exists(pulled_card.name, file_path):
                             with open(file_path, "a") as storage_add:
                                 storage_add.write(pulled_card.name + "\n")
@@ -316,7 +332,7 @@ while running:
                     code_active = True
                 elif pull_button_rect.collidepoint(event.pos) and coin >= pull_couse:
                     pulled_card = gacha.pull()
-                    file_path = "D:/Workspace/GAME-PROJECT/pygame-cardtest/collection.txt"
+                    file_path = "C:/Users/Punn/OneDrive/Documents/GitHub/GAME-PROJECT/pygame-cardtest/collection.txt"
                     
                     if not check_if_card_exists(pulled_card.name, file_path):
                         with open(file_path, "a") as storage_add:
@@ -331,7 +347,7 @@ while running:
                         pulled_card = gacha.pull()
                         tenshow.append(pulled_card.show)
                         
-                        file_path = "D:/Workspace/GAME-PROJECT/pygame-cardtest/collection.txt"
+                        file_path = "C:/Users/Punn/OneDrive/Documents/GitHub/GAME-PROJECT/pygame-cardtest/collection.txt"
                         if not check_if_card_exists(pulled_card.name, file_path):
                             with open(file_path, "a") as storage_add:
                                 storage_add.write(pulled_card.name + "\n")
@@ -372,30 +388,14 @@ while running:
         draw_button(collection_button_rect, "Collection", collection_button_rect.collidepoint(mouse_pos))
 
 
-
     elif game_state == BATTLE:
-        '''def click_card(mouse_x,mouse_y):
-            if a <= mouse_x <= b and y2 <= mouse_y <= y1:
-                return 0
-            elif c <= mouse_x <= d and y2 <= mouse_y <= y1:
-                return 1
-            elif c <= mouse_x <= d and y2 <= mouse_y <= y1:
-                return 2
-            elif c <= mouse_x <= d and y2 <= mouse_y <= y1:
-                return 3
-            elif c <= mouse_x <= d and y2 <= mouse_y <= y1:
-                return 4
-            elif c <= mouse_x <= d and y2 <= mouse_y <= y1:
-                return 5
-            elif c <= mouse_x <= d and y2 <= mouse_y <= y1:
-                return 6'''
 
         battle_map = pygame.image.load("C:/Users/Punn/Downloads/battle_map.jpg")
         battle_map = pygame.transform.scale(battle_map, (SCREEN_WIDTH, SCREEN_HEIGHT))
         screen.blit(battle_map, (0, 0))
         round = 1
         hp_left = 1000
-'''
+
         player1_stat = player_control(1000,3)
         bot_stat = player_control(1000,3)
         for i in range(5):
@@ -421,7 +421,7 @@ while running:
             event.type == pygame.MOUSEBUTTONDOWN
             mouse_x, mouse_y = event.pos
             location_in_list_of_clicked_card = click_card(mouse_x,mouse_y)
-            player1_stat.deck_to_tome(location_in_list_of_clicked_card)'''
+            player1_stat.deck_to_tome(location_in_list_of_clicked_card)
 
 
 
