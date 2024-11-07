@@ -3,6 +3,7 @@ from gacha import GachaSystem  # Import your Gacha system
 from ai_battle import AIBattle  # Import your Battle system
 from deck import Deck  # Import Deck system
 from collection import Collection  # Import Collection system
+from battlesys import player_control
 
 # Initialize pygame
 pygame.init()
@@ -370,13 +371,59 @@ while running:
         draw_button(gacha_button_rect, "Gacha", gacha_button_rect.collidepoint(mouse_pos))
         draw_button(collection_button_rect, "Collection", collection_button_rect.collidepoint(mouse_pos))
 
+
+
     elif game_state == BATTLE:
-        screen.fill(WHITE)
-        text = font.render("Battle Screen - Press ESC to return", True, BLACK)
-        screen.blit(text, (100, 100))
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_ESCAPE]:
-            game_state = HOME
+        '''def click_card(mouse_x,mouse_y):
+            if a <= mouse_x <= b and y2 <= mouse_y <= y1:
+                return 0
+            elif c <= mouse_x <= d and y2 <= mouse_y <= y1:
+                return 1
+            elif c <= mouse_x <= d and y2 <= mouse_y <= y1:
+                return 2
+            elif c <= mouse_x <= d and y2 <= mouse_y <= y1:
+                return 3
+            elif c <= mouse_x <= d and y2 <= mouse_y <= y1:
+                return 4
+            elif c <= mouse_x <= d and y2 <= mouse_y <= y1:
+                return 5
+            elif c <= mouse_x <= d and y2 <= mouse_y <= y1:
+                return 6'''
+
+        battle_map = pygame.image.load("C:/Users/Punn/Downloads/battle_map.jpg")
+        battle_map = pygame.transform.scale(battle_map, (SCREEN_WIDTH, SCREEN_HEIGHT))
+        screen.blit(battle_map, (0, 0))
+        round = 1
+        hp_left = 1000
+'''
+        player1_stat = player_control(1000,3)
+        bot_stat = player_control(1000,3)
+        for i in range(5):
+            player1_stat.add_card()
+            bot_stat.add_card()
+
+        while round <= 10:
+            player1_stat.update_stat(hp_left,round)
+            bot_stat.update_stat(hp_left,round)
+
+            if player1_stat.hp <= 0:
+                print("lose")
+                break
+            elif bot_stat.hp <= 0:
+                print("win")
+                break
+            
+            print("round:",round)
+            player1_stat.add_card()
+            bot_stat.add_card()
+        if len(player1_stat.deck) >= 7:
+            print("pls select card to remove")
+            event.type == pygame.MOUSEBUTTONDOWN
+            mouse_x, mouse_y = event.pos
+            location_in_list_of_clicked_card = click_card(mouse_x,mouse_y)
+            player1_stat.deck_to_tome(location_in_list_of_clicked_card)'''
+
+
 
     elif game_state == DECK:
         screen.fill(WHITE)

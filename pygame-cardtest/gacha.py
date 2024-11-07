@@ -65,5 +65,5 @@ class GachaSystem:
         card_pool = [card for card in self.cards if card.rarity == "Legendary"]
         return random.choice(card_pool)
     
-
-
+    def get_card(self):
+        return self.cards
