@@ -214,70 +214,93 @@ def load_collected_cards():
     except FileNotFoundError:
         print("Collection file not found.")
     return collected_cards,collected_cards2
-def load_deck():
-    global deck_main
-    with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\deck.txt", "r") as file:
-        for line in file:
-            word = line.strip()
-            if word in deck_main:
-                deck_main[word] += 1
-            else:
-                deck_main[word] = 1
-    return deck_main
-        
+
+
+
 selected_card = None  # Stores currently selected card
+card_offset = (0, 0)  # Offset for dragging
+fixed_slots = []  # Stores fixed position slots
+placed_cards = {}  # Stores cards placed in each fixed slot
+
+def initialize_fixed_slots():
+    """Initialize the fixed position slots (10 slots)."""
+    global fixed_slots
+    fixed_slot_start_x = 200  # Starting x position for the fixed slots
+    fixed_slot_start_y = 100  # Starting y position for the fixed slots
+    fixed_slot_width = 80
+    fixed_slot_height = 150
+    fixed_slot_spacing = 10
+    fixed_slots_count = 10  # Total 10 slots
+
+    # Generate 10 fixed slots in a single row
+    for i in range(fixed_slots_count):
+        slot_x = fixed_slot_start_x + i * (fixed_slot_width + fixed_slot_spacing)
+        slot_y = fixed_slot_start_y
+        fixed_slots.append(pygame.Rect(slot_x, slot_y, fixed_slot_width, fixed_slot_height))
+
+initialize_fixed_slots()
 
 def draw_deck_page(screen, gacha, deck_cards):
-    """Draw the deck page with cards arranged in 3 rows and handle card selection"""
-    global selected_card
-    # Card display settings
+    """Draw the deck page with cards arranged in the lower grid and handle card selection, dragging, and snapping."""
+    global selected_card, card_offset
     card_width = 80
     card_height = 150
-    start_x = 200
-    start_y = 400  # Starting y position of the first row
+    deck_start_x = 200
+    deck_start_y = 400  # Starting y position for the deck cards
     card_spacing = 10
-    slots_per_row = 18  # Slots per row (3 rows of 6 for a total of 18 slots)
+    slots_per_row = 18
 
-    # Draw white slots in a 3-row grid
+    # Draw deck slots in a 3-row grid (lower section)
     for row in range(3):
         for i in range(slots_per_row):
-            slot_x = start_x + i * (card_width + card_spacing)
-            slot_y = start_y + row * (card_height + card_spacing)
+            slot_x = deck_start_x + i * (card_width + card_spacing)
+            slot_y = deck_start_y + row * (card_height + card_spacing)
             slot_rect = pygame.Rect(slot_x, slot_y, card_width, card_height)
             pygame.draw.rect(screen, (255, 255, 255), slot_rect)
             pygame.draw.rect(screen, (200, 200, 200), slot_rect, 2)
 
-    # Display cards and handle selection
+    # Draw fixed slots in the upper section
+    for slot_rect in fixed_slots:
+        pygame.draw.rect(screen, (255, 255, 255), slot_rect)
+        pygame.draw.rect(screen, (200, 200, 200), slot_rect, 2)
+
+    # Display cards in fixed slots if placed
+    for slot_index, card_name in placed_cards.items():
+        for card in gacha.cards:
+            if card.name == card_name:
+                slot_rect = fixed_slots[slot_index]
+                card_image = pygame.transform.scale(card.image, (card_width, card_height))
+                screen.blit(card_image, (slot_rect.x, slot_rect.y))
+                break
+
+    # Display deck cards in the lower section and handle dragging
     card_hit_boxes = []  # List of tuples (rect, card_name)
     card_position = 0
 
-    # Process each unique card only once
-    for card_name in set(deck_cards.keys()):  # Use set to get unique card names
+    for card_name in set(deck_cards.keys()):
         row = card_position // slots_per_row
         col = card_position % slots_per_row
 
-        if row < 3:  # Ensure we're only placing in the first 3 rows
+        if row < 3:
             for card in gacha.cards:
                 if card.name == card_name:
-                    # Calculate card position
-                    card_x = start_x + col * (card_width + card_spacing)
-                    card_y = start_y + row * (card_height + card_spacing)
-                    
-                    # Store card hitbox and name
+                    # Calculate initial position
+                    card_x = deck_start_x + col * (card_width + card_spacing)
+                    card_y = deck_start_y + row * (card_height + card_spacing)
+
+                    # Highlight selected card for dragging
+                    if selected_card == card_name:
+                        mouse_x, mouse_y = pygame.mouse.get_pos()
+                        card_x, card_y = mouse_x - card_offset[0], mouse_y - card_offset[1]
+
+                    # Draw card
                     card_rect = pygame.Rect(card_x, card_y, card_width, card_height)
                     card_hit_boxes.append((card_rect, card_name))
                     
-                    # Highlight selected card
-                    if selected_card == card_name:
-                        highlight_rect = pygame.Rect(card_x - 2, card_y - 2, 
-                                                     card_width + 4, card_height + 4)
-                        pygame.draw.rect(screen, (255, 215, 0), highlight_rect, 3)  # Golden highlight
-                    
-                    # Draw card
                     card_image = pygame.transform.scale(card.image, (card_width, card_height))
                     screen.blit(card_image, (card_x, card_y))
-                    
-                    # Draw card count
+
+                    # Draw card count if > 1
                     count = deck_cards[card_name]
                     if count > 1:
                         count_font = pygame.font.Font(None, 24)
@@ -287,27 +310,43 @@ def draw_deck_page(screen, gacha, deck_cards):
                         shadow_text = count_font.render(f"x{count}", True, (0, 0, 0))
                         screen.blit(shadow_text, (count_rect.x + 1, count_rect.y + 1))
                         screen.blit(count_text, count_rect)
-                    
+
                     card_position += 1
                     break
-    
-    # Handle card selection
-    if pygame.mouse.get_pressed()[0]:  # Left click
+
+    # Handle card selection, dragging, and snapping to fixed slots
+    if pygame.mouse.get_pressed()[0]:  # Left click for selecting or dragging
         mouse_pos = pygame.mouse.get_pos()
-        for card_rect, card_name in card_hit_boxes:
-            if card_rect.collidepoint(mouse_pos):
-                selected_card = card_name
-                break
+        if not selected_card:
+            # Start dragging if a card is clicked
+            for card_rect, card_name in card_hit_boxes:
+                if card_rect.collidepoint(mouse_pos):
+                    selected_card = card_name
+                    card_offset = (mouse_pos[0] - card_rect.x, mouse_pos[1] - card_rect.y)
+                    break
+    else:
+        # On mouse release, snap to the nearest fixed slot if applicable
+        if selected_card:
+            mouse_pos = pygame.mouse.get_pos()
+            for slot_index, slot_rect in enumerate(fixed_slots):
+                if slot_rect.collidepoint(mouse_pos) and slot_index not in placed_cards:
+                    # Place card in slot and update deck count
+                    placed_cards[slot_index] = selected_card
+                    deck_cards[selected_card] -= 1
+                    if deck_cards[selected_card] == 0:
+                        del deck_cards[selected_card]
+                    break
+            selected_card = None  # Deselect card after placing
 
     return card_hit_boxes
 
 
 def load_deck():
-    """Load deck from file and count unique cards"""
+    """Load deck from file and count unique cards."""
     global deck_main
     deck_main = {}
     try:
-        with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\deck.txt", "r") as file:
+        with open("D:\\Workspace\\GAME-PROJECT\\pygame-cardtest\\deck.txt", "r") as file:
             for line in file:
                 card_name = line.strip()
                 if card_name in deck_main:
@@ -317,46 +356,7 @@ def load_deck():
     except FileNotFoundError:
         print("Deck file not found")
     return deck_main
-def draw_selected_card_preview(screen, card_name, gacha):
-    """Draw a larger preview of the selected card at the top of the screen with a close button"""
-    global selected_card  # Use the global selected_card to clear it when the close button is clicked
 
-    if not card_name:  # If no card is selected, don't draw preview
-        return
-
-    preview_width = 200
-    preview_height = 400
-    preview_x = (SCREEN_WIDTH - preview_width) // 2
-    preview_y = 350  # Display at the top of the screen
-
-    # Find and display the selected card
-    for card in gacha.cards:
-        if card.name == card_name:
-            # Draw a background/border for the preview
-            preview_rect = pygame.Rect(preview_x - 5, preview_y - 5, 
-                                       preview_width + 10, preview_height + 10)
-            pygame.draw.rect(screen, (200, 200, 200), preview_rect)
-            pygame.draw.rect(screen, (100, 100, 100), preview_rect, 3)
-
-            # Draw the card
-            card_image = pygame.transform.scale(card.image, (preview_width, preview_height))
-            screen.blit(card_image, (preview_x, preview_y))
-
-            # Draw the close button (small "X" button in the top-right corner of the preview)
-            close_button_rect = pygame.Rect(preview_x + preview_width - 20, preview_y - 20, 20, 20)
-            pygame.draw.rect(screen, (255, 0, 0), close_button_rect)  # Red button
-            font = pygame.font.Font(None, 20)
-            close_text = font.render("X", True, (255, 255, 255))
-            close_text_rect = close_text.get_rect(center=close_button_rect.center)
-            screen.blit(close_text, close_text_rect)
-
-            # Check for close button click
-            if pygame.mouse.get_pressed()[0]:  # Left click
-                mouse_pos = pygame.mouse.get_pos()
-                if close_button_rect.collidepoint(mouse_pos):
-                    selected_card = None  # Deselect the card to close the preview
-
-            break
 
 
     
@@ -549,8 +549,7 @@ while running:
         draw_deck_page(screen, gacha, deck_main)
     
     # ถ้ามีการ์ดที่ถูกเลือก ให้แสดงภาพพรีวิว
-        if selected_card:
-            draw_selected_card_preview(screen, selected_card, gacha)
+        
     
         keys = pygame.key.get_pressed()
         if keys[pygame.K_ESCAPE]:
