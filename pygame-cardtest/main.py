@@ -1,9 +1,6 @@
 import pygame
 from gacha import GachaSystem  # Import your Gacha system
-from ai_battle import AIBattle  # Import your Battle system
-from deck import Deck  # Import Deck system
-from collection import Collection  # Import Collection system
-
+import os
 # Initialize pygame
 pygame.init()
 
@@ -29,6 +26,7 @@ pull_img = pygame.image.load('background/GC.png')
 gacha_background=pygame.image.load('gacha background/1.jpg')
 show_rate=pygame.image.load('gacha background/background.png')
 bg_col=pygame.image.load('colbg/bg.png')
+deck_bg=pygame.image.load("background/deck.png")
 
 # Load the coin image
 coin_img = pygame.image.load('asset/coin.png')  # Path to your coin image
@@ -54,9 +52,7 @@ next_button_rect = pygame.Rect((1550,830, 150, 30))
 
 # Initialize systems
 gacha = GachaSystem()  # Initialize the Gacha system
-collection = Collection()  # Initialize the Collection system
-deck = Deck(collection)  # Pass the Collection object to Deck
-ai_battle = AIBattle()  # Initialize the AI Battle system
+# Initialize the AI Battle system
 
 # Initialize variables for displaying pulled card result
 pulled_card = None
@@ -196,6 +192,15 @@ current_card_index = 0
 # Main game loop
 collected_cards = []
 collected_cards2=[]
+deck_main={}
+dragging_card = None
+top_slots = [None] * 20
+card_width = 80
+card_height = 150
+start_x = 200
+start_y = 400  # Starting y position of the first row
+card_spacing = 10
+slots_per_row = 18
 def load_collected_cards():
     global  collected_cards
 
@@ -209,6 +214,152 @@ def load_collected_cards():
     except FileNotFoundError:
         print("Collection file not found.")
     return collected_cards,collected_cards2
+def load_deck():
+    global deck_main
+    with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\deck.txt", "r") as file:
+        for line in file:
+            word = line.strip()
+            if word in deck_main:
+                deck_main[word] += 1
+            else:
+                deck_main[word] = 1
+    return deck_main
+        
+selected_card = None  # Stores currently selected card
+
+def draw_deck_page(screen, gacha, deck_cards):
+    """Draw the deck page with cards arranged in 3 rows and handle card selection"""
+    global selected_card
+    # Card display settings
+    card_width = 80
+    card_height = 150
+    start_x = 200
+    start_y = 400  # Starting y position of the first row
+    card_spacing = 10
+    slots_per_row = 18  # Slots per row (3 rows of 6 for a total of 18 slots)
+
+    # Draw white slots in a 3-row grid
+    for row in range(3):
+        for i in range(slots_per_row):
+            slot_x = start_x + i * (card_width + card_spacing)
+            slot_y = start_y + row * (card_height + card_spacing)
+            slot_rect = pygame.Rect(slot_x, slot_y, card_width, card_height)
+            pygame.draw.rect(screen, (255, 255, 255), slot_rect)
+            pygame.draw.rect(screen, (200, 200, 200), slot_rect, 2)
+
+    # Display cards and handle selection
+    card_hit_boxes = []  # List of tuples (rect, card_name)
+    card_position = 0
+
+    # Process each unique card only once
+    for card_name in set(deck_cards.keys()):  # Use set to get unique card names
+        row = card_position // slots_per_row
+        col = card_position % slots_per_row
+
+        if row < 3:  # Ensure we're only placing in the first 3 rows
+            for card in gacha.cards:
+                if card.name == card_name:
+                    # Calculate card position
+                    card_x = start_x + col * (card_width + card_spacing)
+                    card_y = start_y + row * (card_height + card_spacing)
+                    
+                    # Store card hitbox and name
+                    card_rect = pygame.Rect(card_x, card_y, card_width, card_height)
+                    card_hit_boxes.append((card_rect, card_name))
+                    
+                    # Highlight selected card
+                    if selected_card == card_name:
+                        highlight_rect = pygame.Rect(card_x - 2, card_y - 2, 
+                                                     card_width + 4, card_height + 4)
+                        pygame.draw.rect(screen, (255, 215, 0), highlight_rect, 3)  # Golden highlight
+                    
+                    # Draw card
+                    card_image = pygame.transform.scale(card.image, (card_width, card_height))
+                    screen.blit(card_image, (card_x, card_y))
+                    
+                    # Draw card count
+                    count = deck_cards[card_name]
+                    if count > 1:
+                        count_font = pygame.font.Font(None, 24)
+                        count_text = count_font.render(f"x{count}", True, (255, 255, 255))
+                        count_rect = count_text.get_rect(bottomright=(card_x + card_width - 5, 
+                                                                      card_y + card_height - 5))
+                        shadow_text = count_font.render(f"x{count}", True, (0, 0, 0))
+                        screen.blit(shadow_text, (count_rect.x + 1, count_rect.y + 1))
+                        screen.blit(count_text, count_rect)
+                    
+                    card_position += 1
+                    break
+    
+    # Handle card selection
+    if pygame.mouse.get_pressed()[0]:  # Left click
+        mouse_pos = pygame.mouse.get_pos()
+        for card_rect, card_name in card_hit_boxes:
+            if card_rect.collidepoint(mouse_pos):
+                selected_card = card_name
+                break
+
+    return card_hit_boxes
+
+
+def load_deck():
+    """Load deck from file and count unique cards"""
+    global deck_main
+    deck_main = {}
+    try:
+        with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\deck.txt", "r") as file:
+            for line in file:
+                card_name = line.strip()
+                if card_name in deck_main:
+                    deck_main[card_name] += 1
+                else:
+                    deck_main[card_name] = 1
+    except FileNotFoundError:
+        print("Deck file not found")
+    return deck_main
+def draw_selected_card_preview(screen, card_name, gacha):
+    """Draw a larger preview of the selected card at the top of the screen with a close button"""
+    global selected_card  # Use the global selected_card to clear it when the close button is clicked
+
+    if not card_name:  # If no card is selected, don't draw preview
+        return
+
+    preview_width = 200
+    preview_height = 400
+    preview_x = (SCREEN_WIDTH - preview_width) // 2
+    preview_y = 350  # Display at the top of the screen
+
+    # Find and display the selected card
+    for card in gacha.cards:
+        if card.name == card_name:
+            # Draw a background/border for the preview
+            preview_rect = pygame.Rect(preview_x - 5, preview_y - 5, 
+                                       preview_width + 10, preview_height + 10)
+            pygame.draw.rect(screen, (200, 200, 200), preview_rect)
+            pygame.draw.rect(screen, (100, 100, 100), preview_rect, 3)
+
+            # Draw the card
+            card_image = pygame.transform.scale(card.image, (preview_width, preview_height))
+            screen.blit(card_image, (preview_x, preview_y))
+
+            # Draw the close button (small "X" button in the top-right corner of the preview)
+            close_button_rect = pygame.Rect(preview_x + preview_width - 20, preview_y - 20, 20, 20)
+            pygame.draw.rect(screen, (255, 0, 0), close_button_rect)  # Red button
+            font = pygame.font.Font(None, 20)
+            close_text = font.render("X", True, (255, 255, 255))
+            close_text_rect = close_text.get_rect(center=close_button_rect.center)
+            screen.blit(close_text, close_text_rect)
+
+            # Check for close button click
+            if pygame.mouse.get_pressed()[0]:  # Left click
+                mouse_pos = pygame.mouse.get_pos()
+                if close_button_rect.collidepoint(mouse_pos):
+                    selected_card = None  # Deselect the card to close the preview
+
+            break
+
+
+    
 def draw_collection_page(screen, gacha, collected_card_names, bg_col,  page_number):
     """Draw a single page of the collection"""
     # Draw background
@@ -289,6 +440,8 @@ while running:
                     if not check_if_card_exists(pulled_card.name, file_path):
                         with open(file_path, "a") as storage_add:
                             storage_add.write(pulled_card.name + "\n")
+                    with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\deck.txt","a") as f:
+                        f.write(pulled_card.name + "\n")
                     
                     game_state = SHOW_STATE
                     coin -= 100
@@ -303,6 +456,8 @@ while running:
                         if not check_if_card_exists(pulled_card.name, file_path):
                             with open(file_path, "a") as storage_add:
                                 storage_add.write(pulled_card.name + "\n")
+                        with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\deck.txt","a") as f:
+                            f.write(pulled_card.name + "\n")
                     
                     game_state = SHOWTEN_STATE
                     coin -= 1000
@@ -320,6 +475,8 @@ while running:
                     if not check_if_card_exists(pulled_card.name, file_path):
                         with open(file_path, "a") as storage_add:
                             storage_add.write(pulled_card.name + "\n")
+                    with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\deck.txt","a") as f:
+                        f.write(pulled_card.name + "\n")
                     
                     game_state = SHOW_STATE
                     coin -= 100
@@ -334,6 +491,8 @@ while running:
                         if not check_if_card_exists(pulled_card.name, file_path):
                             with open(file_path, "a") as storage_add:
                                 storage_add.write(pulled_card.name + "\n")
+                        with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\deck.txt","a") as f:
+                            f.write(pulled_card.name + "\n")
                     
                     game_state = SHOWTEN_STATE
                     coin -= 1000
@@ -379,13 +538,24 @@ while running:
             game_state = HOME
 
     elif game_state == DECK:
-        screen.fill(WHITE)
-        text = font.render("Deck Screen - Press ESC to return", True, BLACK)
-        screen.blit(text, (100, 100))
-        deck.show_deck()  # Show the current deck
+    # แสดงพื้นหลัง
+        deck_bg = pygame.transform.scale(deck_bg, (SCREEN_WIDTH-150, SCREEN_HEIGHT))
+        rect = deck_bg.get_rect()
+        rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        screen.blit(deck_bg, rect)
+    
+    # โหลดและแสดงการ์ดในเด็ค
+        deck_main = load_deck()
+        draw_deck_page(screen, gacha, deck_main)
+    
+    # ถ้ามีการ์ดที่ถูกเลือก ให้แสดงภาพพรีวิว
+        if selected_card:
+            draw_selected_card_preview(screen, selected_card, gacha)
+    
         keys = pygame.key.get_pressed()
         if keys[pygame.K_ESCAPE]:
             game_state = HOME
+            selected_card = None
 
     elif game_state == GACHA:
         screen.blit(pull_img, (150, 0))
@@ -483,5 +653,7 @@ while running:
 
     pygame.display.update()
     clock.tick(30)
+
+
 
 pygame.quit()
