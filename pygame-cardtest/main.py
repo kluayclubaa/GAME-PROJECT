@@ -1,6 +1,14 @@
 import pygame
+import random
 from gacha import GachaSystem  # Import your Gacha system
 import os
+import sys
+
+
+from battle_system import Player_stat
+from battle_system import battle_storage
+from battle_system import Bot_stat
+
 # Initialize pygame
 pygame.init()
 
@@ -213,7 +221,7 @@ def load_collected_cards():
     global  collected_cards
 
     try:
-        with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\collection.txt", "r") as file:
+        with open("collection.txt", "r") as file:
                 all_cards = [line.strip() for line in file if line.strip()]
                 
                 collected_cards=all_cards[:10]
@@ -383,8 +391,12 @@ def draw_deck_page(screen, gacha, deck_cards):
                     
                     if deck_cards[selected_card] <= 0:
                         del deck_cards[selected_card]
+
                     update_deck_file()  # Update file after placing card in fixed slot
+
+                    
                     break
+      
             selected_card = None  # Deselect card after placing
 
     return card_hit_boxes
@@ -614,12 +626,303 @@ while running:
         draw_button(collection_button_rect, "Collection", collection_button_rect.collidepoint(mouse_pos))
 
     elif game_state == BATTLE:
-        screen.fill(WHITE)
-        text = font.render("Battle Screen - Press ESC to return", True, BLACK)
-        screen.blit(text, (100, 100))
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_ESCAPE]:
-            game_state = HOME
+        battle_map = pygame.image.load("C:/Users/Punn/Downloads/battle_map.jpg")
+        battle_map = pygame.transform.scale(battle_map, (SCREEN_WIDTH, SCREEN_HEIGHT))
+        screen.blit(battle_map, (0, 0))
+
+        def location_click_card(mouse_x,mouse_y):
+            if 450 <= mouse_x <= 570 and 730 <= mouse_y <= 890:
+                return 0
+            elif 600 <= mouse_x <= 720 and 730 <= mouse_y <= 890:
+                return 1
+            elif 750 <= mouse_x <= 870 and 730 <= mouse_y <= 890:
+                return 2
+            elif 900 <= mouse_x <= 1020 and 730 <= mouse_y <= 890:
+                return 3
+            elif 1050 <= mouse_x <= 1170 and 730 <= mouse_y <= 890:
+                return 4
+            elif 1200 <= mouse_x <= 1320 and 730 <= mouse_y <= 890:
+                return 5
+            elif 1350 <= mouse_x <= 1470 and 730 <= mouse_y <= 890:
+                return 6
+        
+        class Picture:
+            def __init__(self, position, image,power):
+                self.image = image
+                self.rect = self.image.get_rect(topleft=position)
+                self.position = position
+                self.target_position = [(480, 502),(767, 502),(1052, 502),(1342, 502)]  
+                self.start_position = position  
+                self.dragging = False  
+                self.placed = False
+                self.power = power
+
+            def draw(self, screen):
+                screen.blit(self.image, self.rect.topleft)
+
+            def check_click(self, mouse_position):
+                if self.rect.collidepoint(mouse_position):
+                    return True
+    
+            def start_drag(self):
+                if not self.placed:
+                    self.dragging = True
+    
+            def stop_drag(self):
+                self.dragging = False
+                i = 0
+                for target_position in self.target_position:
+                    distance_to_target = pygame.math.Vector2(self.position[0] - target_position[0], self.position[1] - target_position[1]).length()
+                    if distance_to_target <= 100:
+                        self.position = target_position
+                        self.rect.topleft = self.position  # อัพเดตตำแหน่งจริงใน rect
+                        self.image = pygame.transform.smoothscale(self.image, (90,120))
+                        self.placed = True
+                        if i == 0:
+                            player1.field1.append(player1.deck[location_click])
+                        elif i == 1:
+                            player1.field2.append(player1.deck[location_click])
+                        elif i == 2:
+                            player1.field3.append(player1.deck[location_click])
+                        elif i == 3:
+                            player1.field4.append(player1.deck[location_click])
+                        player1.deck.remove(player1.deck[location_click])
+                        player1.update_deck_positions()
+                        break
+                    i += 1
+                else:
+               
+                    self.position = self.start_position
+                    self.rect.topleft = self.position
+
+            def update(self, mouse_pos):
+                if self.dragging:
+                    # หากลากภาพ, อัพเดตตำแหน่ง
+                    self.position = mouse_pos
+                    self.rect.topleft = self.position
+        battle_bot = Bot_stat()
+        player1 = Player_stat()
+        new_width, new_height = 120, 160
+#มาแก้ทีหลังให้เอาชื่อจากdeck
+        my_battle_storage = battle_storage()
+        i = 0
+        for card in my_battle_storage.battle_list:
+            mycard = card.image
+            mycard = pygame.transform.smoothscale(mycard,(new_width,new_height))
+            image = Picture((450 + 150*i,730),mycard,card.power)
+            player1.add_card(image)
+            i += 1
+        
+        location_click = None
+        for round in range(10):
+            print("round",round+1)
+            continue_play = True
+            while continue_play:
+                battle_map = pygame.image.load("C:/Users/Punn/Downloads/battle_map.jpg")
+                battle_map = pygame.transform.scale(battle_map, (SCREEN_WIDTH, SCREEN_HEIGHT))
+                screen.blit(battle_map, (0, 0))
+
+                if player1.deck:
+                    for card in player1.deck:  
+                        card.draw(screen)
+                if player1.field1:  
+                    for card in player1.field1:  
+                        card.draw(screen)
+
+                if player1.field2:  
+                    for card in player1.field2:  
+                        card.draw(screen)
+                
+                if player1.field3:  
+                    for card in player1.field3:  
+                        card.draw(screen)
+                
+                if player1.field4:  
+                    for card in player1.field4:  
+                        card.draw(screen)
+
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_RETURN:  # K_RETURN คือปุ่ม Enter
+                            continue_play = not continue_play
+
+                    if event.type == pygame.MOUSEBUTTONDOWN: # ตรวจจับการคลิกเมาส์
+                        mouse_pos = pygame.mouse.get_pos()
+                        x_pos, y_pos = mouse_pos
+                        location_click = location_click_card(x_pos, y_pos)  
+                        if location_click is not None and location_click < len(player1.deck):  # ตรวจสอบว่า location_click ถูกต้อง
+                            if player1.deck[location_click].check_click(mouse_pos):
+                                player1.deck[location_click].start_drag()  # เริ่มลากภาพ
+
+                    elif event.type == pygame.MOUSEBUTTONUP and location_click is not None:
+                        if location_click < len(player1.deck):
+                            player1.deck[location_click].stop_drag()
+                        location_click = None
+            
+                # อัพเดตตำแหน่งของภาพ
+                mouse_pos = pygame.mouse.get_pos()
+                if location_click is not None and location_click < len(player1.deck):
+                    player1.deck[location_click].update(mouse_pos)
+                pygame.display.flip()
+            #ทำระบบเล่นฝั่งbot
+            num = 0
+            if battle_bot.bot_field1 == []:
+                num += 1
+            if battle_bot.bot_field2 == []:
+                num += 1
+            if battle_bot.bot_field3 == []:
+                num += 1
+            if battle_bot.bot_field4 == []:
+                num += 1
+            random_add_card_num_bot = random.randint(1,num)
+            if random_add_card_num_bot == 1:
+                random_add_card_num_bot = random.randint(1,num)
+                for i in range(random_add_card_num_bot):
+                    if battle_bot.bot_field1 == []:
+                        random_card = random.choice(my_battle_storage.storage)
+                        random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
+                        random_card = Picture((480,285),random_card_image,random_card.power)
+                        battle_bot.bot_field1.append(random_card)
+
+                    elif battle_bot.bot_field2 == []:
+                        random_card = random.choice(my_battle_storage.storage)
+                        random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
+                        random_card = Picture((767,285),random_card_image,random_card.power)
+                        battle_bot.bot_field2.append(random_card)
+
+                    elif battle_bot.bot_field3 == []:
+                        random_card = random.choice(my_battle_storage.storage)
+                        random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
+                        random_card = Picture((1052,285),random_card_image,random_card.power)
+                        battle_bot.bot_field3.append(random_card)
+
+                    elif battle_bot.bot_field4 == []:
+                        random_card = random.choice(my_battle_storage.storage)
+                        random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
+                        random_card = Picture((1342,285),random_card_image,random_card.power)
+                        battle_bot.bot_field4.append(random_card)
+
+            elif random_add_card_num_bot == 2:
+                random_add_card_num_bot = random.randint(1,num)
+                for i in range(random_add_card_num_bot):
+                    if battle_bot.bot_field4 == []:
+                        random_card = random.choice(my_battle_storage.storage)
+                        random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
+                        random_card = Picture((1342,285),random_card_image,random_card.power)
+                        battle_bot.bot_field4.append(random_card)
+
+                    elif battle_bot.bot_field3 == []:
+                        random_card = random.choice(my_battle_storage.storage)
+                        random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
+                        random_card = Picture((1052,285),random_card_image,random_card.power)
+                        battle_bot.bot_field3.append(random_card)
+
+                    elif battle_bot.bot_field2 == []:
+                        random_card = random.choice(my_battle_storage.storage)
+                        random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
+                        random_card = Picture((767,285),random_card_image,random_card.power)
+                        battle_bot.bot_field2.append(random_card)
+
+                    elif battle_bot.bot_field1 == []:
+                        random_card = random.choice(my_battle_storage.storage)
+                        random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
+                        random_card = Picture((480,285),random_card_image,random_card.power)
+                        battle_bot.bot_field1.append(random_card)
+
+            elif random_add_card_num_bot == 3:
+                random_add_card_num_bot = random.randint(1,num)
+                for i in range(random_add_card_num_bot):
+                    if battle_bot.bot_field1 == []:
+                        random_card = random.choice(my_battle_storage.storage)
+                        random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
+                        random_card = Picture((480,285),random_card_image,random_card.power)
+                        battle_bot.bot_field1.append(random_card)
+
+                    elif battle_bot.bot_field3 == []:
+                        random_card = random.choice(my_battle_storage.storage)
+                        random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
+                        random_card = Picture((1052,285),random_card_image,random_card.power)
+                        battle_bot.bot_field3.append(random_card)
+
+                    elif battle_bot.bot_field2 == []:
+                        random_card = random.choice(my_battle_storage.storage)
+                        random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
+                        random_card = Picture((767,285),random_card_image,random_card.power)
+                        battle_bot.bot_field2.append(random_card)
+
+                    elif battle_bot.bot_field4 == []:
+                        random_card = random.choice(my_battle_storage.storage)
+                        random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
+                        random_card = Picture((1342,285),random_card_image,random_card.power)
+                        battle_bot.bot_field4.append(random_card)
+
+            elif random_add_card_num_bot == 4:
+                random_add_card_num_bot = random.randint(1,num)
+                for i in range(random_add_card_num_bot):
+                    if battle_bot.bot_field4 == []:
+                        random_card = random.choice(my_battle_storage.storage)
+                        random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
+                        random_card = Picture((1342,285),random_card_image,random_card.power)
+                        battle_bot.bot_field4.append(random_card)
+
+                    elif battle_bot.bot_field2 == []:
+                        random_card = random.choice(my_battle_storage.storage)
+                        random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
+                        random_card = Picture((767,285),random_card_image,random_card.power)
+                        battle_bot.bot_field2.append(random_card)
+
+                    elif battle_bot.bot_field3 == []:
+                        random_card = random.choice(my_battle_storage.storage)
+                        random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
+                        random_card = Picture((1052,285),random_card_image,random_card.power)
+                        battle_bot.bot_field3.append(random_card)
+
+                    elif battle_bot.bot_field1 == []:
+                        random_card = random.choice(my_battle_storage.storage)
+                        random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
+                        random_card = Picture((480,285),random_card_image,random_card.power)
+                        battle_bot.bot_field1.append(random_card)
+
+
+            continue_play_bot = True    
+            while continue_play_bot:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_RETURN:  # K_RETURN คือปุ่ม Enter
+                            continue_play_bot = not continue_play_bot
+
+
+            if player1.hp <= 0:
+                print("lose")
+
+
+            if len(player1.deck) < 7:
+                random_card = random.choice(my_battle_storage.storage)
+                random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
+                loca_add = len(player1.deck) - 1
+                random_card = Picture((450 + 150*loca_add,730),random_card_image,random_card.power)
+                player1.add_card(random_card)
+            else:
+                print("your deck is full")
+            
+            
+            
+
+
+            
+
+
+
+
+
 
     elif game_state == DECK:
     # แสดงพื้นหลัง
