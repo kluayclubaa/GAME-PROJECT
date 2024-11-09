@@ -626,7 +626,7 @@ while running:
         draw_button(collection_button_rect, "Collection", collection_button_rect.collidepoint(mouse_pos))
 
     elif game_state == BATTLE:
-        battle_map = pygame.image.load("C:/Users/Punn/Downloads/battle_map.jpg")
+        battle_map = pygame.image.load("background/battle.jpg")
         battle_map = pygame.transform.scale(battle_map, (SCREEN_WIDTH, SCREEN_HEIGHT))
         screen.blit(battle_map, (0, 0))
 
@@ -718,7 +718,7 @@ while running:
             print("round",round+1)
             continue_play = True
             while continue_play:
-                battle_map = pygame.image.load("C:/Users/Punn/Downloads/battle_map.jpg")
+                battle_map = pygame.image.load("background/battle_map.jpg")
                 battle_map = pygame.transform.scale(battle_map, (SCREEN_WIDTH, SCREEN_HEIGHT))
                 screen.blit(battle_map, (0, 0))
 
