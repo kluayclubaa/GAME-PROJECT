@@ -1,6 +1,11 @@
 import pygame
+import random
 from gacha import GachaSystem  # Import your Gacha system
 import os
+import sys
+
+from battle_system import battle_storage
+
 # Initialize pygame
 pygame.init()
 
@@ -205,7 +210,7 @@ def load_collected_cards():
     global  collected_cards
 
     try:
-        with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\collection.txt", "r") as file:
+        with open("collection.txt", "r") as file:
                 all_cards = [line.strip() for line in file if line.strip()]
                 
                 collected_cards=all_cards[:10]
@@ -227,8 +232,8 @@ def initialize_fixed_slots():
     global fixed_slots
     fixed_slot_start_x = 200  # Starting x position for the fixed slots
     fixed_slot_start_y = 100  # Starting y position for the fixed slots
-    fixed_slot_width = 80
-    fixed_slot_height = 150
+    fixed_slot_width = 120
+    fixed_slot_height = 160
     fixed_slot_spacing = 10
     fixed_slots_count = 10  # Total 10 slots
 
@@ -335,7 +340,9 @@ def draw_deck_page(screen, gacha, deck_cards):
                     deck_cards[selected_card] -= 1
                     if deck_cards[selected_card] == 0:
                         del deck_cards[selected_card]
+                    
                     break
+            card_image = pygame.transform.scale(card.image, (120,160 ))
             selected_card = None  # Deselect card after placing
 
     return card_hit_boxes
@@ -346,7 +353,7 @@ def load_deck():
     global deck_main
     deck_main = {}
     try:
-        with open("D:\\Workspace\\GAME-PROJECT\\pygame-cardtest\\deck.txt", "r") as file:
+        with open("deck.txt", "r") as file:
             for line in file:
                 card_name = line.strip()
                 if card_name in deck_main:
@@ -435,12 +442,12 @@ while running:
                     code_active = True
                 elif pull_button_rect.collidepoint(event.pos) and coin >= pull_couse:
                     pulled_card = gacha.pull()
-                    file_path = "D:/Workspace/GAME-PROJECT/pygame-cardtest/collection.txt"
+                    file_path = "collection.txt"
                     
                     if not check_if_card_exists(pulled_card.name, file_path):
                         with open(file_path, "a") as storage_add:
                             storage_add.write(pulled_card.name + "\n")
-                    with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\deck.txt","a") as f:
+                    with open("deck.txt","a") as f:
                         f.write(pulled_card.name + "\n")
                     
                     game_state = SHOW_STATE
@@ -452,11 +459,11 @@ while running:
                         pulled_card = gacha.pull()
                         tenshow.append(pulled_card.show)
                         
-                        file_path = "D:/Workspace/GAME-PROJECT/pygame-cardtest/collection.txt"
+                        file_path = "collection.txt"
                         if not check_if_card_exists(pulled_card.name, file_path):
                             with open(file_path, "a") as storage_add:
                                 storage_add.write(pulled_card.name + "\n")
-                        with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\deck.txt","a") as f:
+                        with open("deck.txt","a") as f:
                             f.write(pulled_card.name + "\n")
                     
                     game_state = SHOWTEN_STATE
@@ -470,12 +477,12 @@ while running:
                     code_active = True
                 elif pull_button_rect.collidepoint(event.pos) and coin >= pull_couse:
                     pulled_card = gacha.pull()
-                    file_path = "D:/Workspace/GAME-PROJECT/pygame-cardtest/collection.txt"
+                    file_path = "collection.txt"
                     
                     if not check_if_card_exists(pulled_card.name, file_path):
                         with open(file_path, "a") as storage_add:
                             storage_add.write(pulled_card.name + "\n")
-                    with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\deck.txt","a") as f:
+                    with open("deck.txt","a") as f:
                         f.write(pulled_card.name + "\n")
                     
                     game_state = SHOW_STATE
@@ -487,11 +494,11 @@ while running:
                         pulled_card = gacha.pull()
                         tenshow.append(pulled_card.show)
                         
-                        file_path = "D:/Workspace/GAME-PROJECT/pygame-cardtest/collection.txt"
+                        file_path = "collection.txt"
                         if not check_if_card_exists(pulled_card.name, file_path):
                             with open(file_path, "a") as storage_add:
                                 storage_add.write(pulled_card.name + "\n")
-                        with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\deck.txt","a") as f:
+                        with open("deck.txt","a") as f:
                             f.write(pulled_card.name + "\n")
                     
                     game_state = SHOWTEN_STATE
@@ -530,12 +537,150 @@ while running:
         draw_button(collection_button_rect, "Collection", collection_button_rect.collidepoint(mouse_pos))
 
     elif game_state == BATTLE:
-        screen.fill(WHITE)
-        text = font.render("Battle Screen - Press ESC to return", True, BLACK)
-        screen.blit(text, (100, 100))
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_ESCAPE]:
-            game_state = HOME
+        battle_map = pygame.image.load("C:/Users/Punn/Downloads/battle_map.jpg")
+        battle_map = pygame.transform.scale(battle_map, (SCREEN_WIDTH, SCREEN_HEIGHT))
+        screen.blit(battle_map, (0, 0))
+
+        def location_click_card(mouse_x,mouse_y):
+            if 450 <= mouse_x <= 570 and 730 <= mouse_y <= 890:
+                return 0
+            elif 600 <= mouse_x <= 720 and 730 <= mouse_y <= 890:
+                return 1
+            elif 750 <= mouse_x <= 870 and 730 <= mouse_y <= 890:
+                return 2
+            elif 900 <= mouse_x <= 1020 and 730 <= mouse_y <= 890:
+                return 3
+            elif 1050 <= mouse_x <= 1170 and 730 <= mouse_y <= 890:
+                return 4
+            elif 1200 <= mouse_x <= 1320 and 730 <= mouse_y <= 890:
+                return 5
+            elif 1350 <= mouse_x <= 1470 and 730 <= mouse_y <= 890:
+                return 6
+        
+        class Player_stat:
+            def __init__(self):
+                self.deck = []
+                self.field = []
+
+            def add_card(self,card):
+                self.deck.append(card)
+                self.update_deck_positions()
+
+            def deck_to_field(self,card):
+                self.field.append(card)
+                self.deck.remove(card)
+                self.update_deck_positions()
+
+            def update_deck_positions(self):
+                i = 0
+                for card in self.deck:
+                    card.position = (450 + 150 * i, 730)  # อัปเดตตำแหน่ง x ตามสูตร และตำแหน่ง y คงที่
+                    card.rect.topleft = card.position
+                    i = i + 1
+
+        class Picture:
+            def __init__(self, position, image):
+                self.image = image
+                self.rect = self.image.get_rect(topleft=position)
+                self.position = position
+                self.target_position = [(480, 502),(767, 502),(1052, 502),(1342, 502)]  
+                self.start_position = position  
+                self.dragging = False  
+                self.placed = False
+
+            def draw(self, screen):
+                screen.blit(self.image, self.rect.topleft)
+
+            def check_click(self, mouse_position):
+                if self.rect.collidepoint(mouse_position):
+                    return True
+    
+            def start_drag(self):
+                if not self.placed:
+                    self.dragging = True
+    
+            def stop_drag(self):
+                self.dragging = False
+        
+                for target_position in self.target_position:
+                    distance_to_target = pygame.math.Vector2(self.position[0] - target_position[0], self.position[1] - target_position[1]).length()
+                    if distance_to_target <= 100:
+                        self.position = target_position
+                        self.rect.topleft = self.position  # อัพเดตตำแหน่งจริงใน rect
+                        self.image = pygame.transform.smoothscale(self.image, (90,120))
+                        self.placed = True
+                        player1.field.append(player1.deck[location_click])
+                        player1.deck.remove(player1.deck[location_click])
+                        player1.update_deck_positions()
+                        break
+                else:
+               
+                    self.position = self.start_position
+                    self.rect.topleft = self.position
+
+            def update(self, mouse_pos):
+                if self.dragging:
+                    # หากลากภาพ, อัพเดตตำแหน่ง
+                    self.position = mouse_pos
+                    self.rect.topleft = self.position    
+        player1 = Player_stat()
+
+
+        new_width, new_height = 120, 160
+#มาแก้ทีหลังให้เอาชื่อจากdeck
+        my_battle_storage = battle_storage()
+        i = 0
+        for card in my_battle_storage.battle_list:
+            mycard = pygame.image.load(card)
+            mycard = pygame.transform.smoothscale(mycard,(new_width,new_height))
+            image = Picture((450 + 150*i,730),mycard)
+            player1.add_card(image)
+            i += 1
+        
+        location_click = None
+        card_to_move = None
+
+        for battle_round in range(10):
+            in_same_round = True
+            while in_same_round:
+                if player1.deck:
+                    for card in player1.deck:  
+                        card.draw(screen)
+                if player1.field:  
+                    for card in player1.field:  
+                        card.draw(screen)
+
+
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_ESCAPE]:
+                    game_state = HOME
+
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            pygame.quit()
+                            sys.exit()
+
+                        if event.type == pygame.MOUSEBUTTONDOWN: # ตรวจจับการคลิกเมาส์
+                            mouse_pos = pygame.mouse.get_pos()
+                            x_pos, y_pos = mouse_pos
+                            location_click = location_click_card(x_pos, y_pos)  
+                            if location_click is not None and location_click < len(player1.deck):  # ตรวจสอบว่า location_click ถูกต้อง
+                                if player1.deck[location_click].check_click(mouse_pos):
+                                    player1.deck[location_click].start_drag()
+
+                        elif event.type == pygame.MOUSEBUTTONUP and location_click is not None:
+                            if location_click < len(player1.deck):
+                                player1.deck[location_click].stop_drag()
+                            location_click = None
+
+                        if event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_RETURN:
+                                in_same_round = not in_same_round
+
+                    mouse_pos = pygame.mouse.get_pos()
+                    if location_click is not None and location_click < len(player1.deck):
+                        player1.deck[location_click].update(mouse_pos)
+                    pygame.display.flip()
 
     elif game_state == DECK:
     # แสดงพื้นหลัง
