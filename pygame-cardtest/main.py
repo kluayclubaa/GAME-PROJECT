@@ -49,7 +49,7 @@ pull_button_rect = pygame.Rect((200, 800, button_width, button_height))
 collection_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 800, button_width, button_height))
 Ten_pills_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 800, button_width, button_height))
 next_button_rect = pygame.Rect((1550,830, 150, 30))
-
+save_button_rect = pygame.Rect((SCREEN_WIDTH - 300, 50, 200, 100))
 # Initialize systems
 gacha = GachaSystem()  # Initialize the Gacha system
 # Initialize the AI Battle system
@@ -75,6 +75,14 @@ COLLECTION2="collection2"
 game_state = HOME
 
 clock = pygame.time.Clock()
+try:
+    with open("deck.txt", "r") as file:
+        with open("deck_replace.txt", "w") as file2:
+            for line in file:
+                file2.write(line)
+except FileNotFoundError:
+    print("Deck file not found")
+
 
 # Function to draw buttons on the home page
 def draw_button(rect, text, hovered=False):
@@ -223,6 +231,11 @@ fixed_slots = []  # Stores fixed position slots
 placed_cards = {}  # Stores cards placed in each fixed slot
 deck_main = {}  # Stores initial deck from file
 
+# Define Save button
+
+
+
+
 def initialize_fixed_slots():
     """Initialize the fixed position slots (10 slots)."""
     global fixed_slots
@@ -249,12 +262,19 @@ initialize_fixed_slots()
 
 def update_deck_file():
     """Update deck.txt file to reflect the current deck_cards state."""
-    with open("D:\\Workspace\\GAME-PROJECT\\pygame-cardtest\\deck.txt", "w") as file:
+    with open("deck_replace.txt", "w") as file:
         for card_name, count in deck_main.items():
             for _ in range(count):
                 file.write(card_name + "\n")
     print("Deck file updated.")
 
+def save_fixed_slots_to_file():
+    """Save the names of cards currently placed in fixed slots to deck_save.txt."""
+    with open("deck_save.txt", "w") as file:
+        for slot_index in sorted(placed_cards.keys()):
+            card_name = placed_cards[slot_index]
+            file.write(card_name + "\n")
+    print("Fixed slot cards saved to deck_save.txt")
 def draw_deck_page(screen, gacha, deck_cards):
     """Draw the deck page with cards arranged in the lower grid and handle card selection, dragging, and snapping."""
     global selected_card, card_offset
@@ -369,12 +389,16 @@ def draw_deck_page(screen, gacha, deck_cards):
 
     return card_hit_boxes
 
+
+
+
+
 def load_deck():
     """Load deck from file and count unique cards."""
     global deck_main
     deck_main = {}
     try:
-        with open("D:\\Workspace\\GAME-PROJECT\\pygame-cardtest\\deck.txt", "r") as file:
+        with open("deck_replace.txt", "r") as file:
             for line in file:
                 card_name = line.strip()
                 if card_name in deck_main:
@@ -464,13 +488,21 @@ while running:
                     code_active = True
                 elif pull_button_rect.collidepoint(event.pos) and coin >= pull_couse:
                     pulled_card = gacha.pull()
-                    file_path = "D:/Workspace/GAME-PROJECT/pygame-cardtest/collection.txt"
+                    file_path = "collection.txt"
                     
                     if not check_if_card_exists(pulled_card.name, file_path):
                         with open(file_path, "a") as storage_add:
                             storage_add.write(pulled_card.name + "\n")
-                    with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\deck.txt","a") as f:
+                    with open("deck.txt","a") as f:
                         f.write(pulled_card.name + "\n")
+                    try:
+                        with open("deck.txt", "r") as file:
+                            with open("deck_replace.txt", "w") as file2:
+                                for line in file:
+                                    file2.write(line)
+                    except FileNotFoundError:
+                        print("Deck file not found")
+
                     
                     game_state = SHOW_STATE
                     coin -= 100
@@ -481,12 +513,19 @@ while running:
                         pulled_card = gacha.pull()
                         tenshow.append(pulled_card.show)
                         
-                        file_path = "D:/Workspace/GAME-PROJECT/pygame-cardtest/collection.txt"
+                        file_path = "collection.txt"
                         if not check_if_card_exists(pulled_card.name, file_path):
                             with open(file_path, "a") as storage_add:
                                 storage_add.write(pulled_card.name + "\n")
-                        with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\deck.txt","a") as f:
+                        with open("deck.txt","a") as f:
                             f.write(pulled_card.name + "\n")
+                        try:
+                            with open("deck.txt", "r") as file:
+                                with open("deck_replace.txt", "w") as file2:
+                                    for line in file:
+                                        file2.write(line)
+                        except FileNotFoundError:
+                            print("Deck file not found")
                     
                     game_state = SHOWTEN_STATE
                     coin -= 1000
@@ -499,14 +538,20 @@ while running:
                     code_active = True
                 elif pull_button_rect.collidepoint(event.pos) and coin >= pull_couse:
                     pulled_card = gacha.pull()
-                    file_path = "D:/Workspace/GAME-PROJECT/pygame-cardtest/collection.txt"
+                    file_path = "collection.txt"
                     
                     if not check_if_card_exists(pulled_card.name, file_path):
                         with open(file_path, "a") as storage_add:
                             storage_add.write(pulled_card.name + "\n")
-                    with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\deck.txt","a") as f:
+                    with open("deck.txt","a") as f:
                         f.write(pulled_card.name + "\n")
-                    
+                    try:
+                        with open("deck.txt", "r") as file:
+                            with open("deck_replace.txt", "w") as file2:
+                                for line in file:
+                                    file2.write(line)
+                    except FileNotFoundError:
+                        print("Deck file not found")
                     game_state = SHOW_STATE
                     coin -= 100
                         
@@ -516,15 +561,22 @@ while running:
                         pulled_card = gacha.pull()
                         tenshow.append(pulled_card.show)
                         
-                        file_path = "D:/Workspace/GAME-PROJECT/pygame-cardtest/collection.txt"
+                        file_path = "collection.txt"
                         if not check_if_card_exists(pulled_card.name, file_path):
                             with open(file_path, "a") as storage_add:
                                 storage_add.write(pulled_card.name + "\n")
-                        with open("D:\Workspace\GAME-PROJECT\pygame-cardtest\deck.txt","a") as f:
+                        with open("deck.txt","a") as f:
                             f.write(pulled_card.name + "\n")
+                        try:
+                            with open("deck.txt", "r") as file:
+                                with open("deck_replace.txt", "w") as file2:
+                                    for line in file:
+                                        file2.write(line)
+                        except FileNotFoundError:
+                            print("Deck file not found")
                     
                     game_state = SHOWTEN_STATE
-                    coin -= 1000     
+                    coin -= 1000
                     current_card_index = 0  # Reset card index for new pulls
             
             elif game_state == SHOWTEN_STATE:
@@ -541,7 +593,10 @@ while running:
             elif game_state == COLLECTION2:
                 if next_button_rect.collidepoint(event.pos):
                     game_state = COLLECTION
-           
+            elif game_state == DECK:
+                if save_button_rect.collidepoint(event.pos):
+                    save_fixed_slots_to_file()
+               
                 
             
 
@@ -568,10 +623,12 @@ while running:
 
     elif game_state == DECK:
     # แสดงพื้นหลัง
+        mouse_pos = pygame.mouse.get_pos()
         deck_bg = pygame.transform.scale(deck_bg, (SCREEN_WIDTH-150, SCREEN_HEIGHT))
         rect = deck_bg.get_rect()
         rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
         screen.blit(deck_bg, rect)
+        draw_button(save_button_rect, "Save", save_button_rect.collidepoint(mouse_pos))
     
     # โหลดและแสดงการ์ดในเด็ค
         deck_main = load_deck()
