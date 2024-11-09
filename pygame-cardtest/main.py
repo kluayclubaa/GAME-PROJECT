@@ -221,34 +221,49 @@ selected_card = None  # Stores currently selected card
 card_offset = (0, 0)  # Offset for dragging
 fixed_slots = []  # Stores fixed position slots
 placed_cards = {}  # Stores cards placed in each fixed slot
+deck_main = {}  # Stores initial deck from file
 
 def initialize_fixed_slots():
     """Initialize the fixed position slots (10 slots)."""
     global fixed_slots
-    fixed_slot_start_x = 200  # Starting x position for the fixed slots
-    fixed_slot_start_y = 100  # Starting y position for the fixed slots
-    fixed_slot_width = 80
-    fixed_slot_height = 150
+    fixed_slot_start_x = 320  # Starting x position for the fixed slots
+    fixed_slot_start_y = 50  # Starting y position for the fixed slots
+    fixed_slot_start_y2 = 220
+    fixed_slot_width = 120
+    fixed_slot_height = 160
     fixed_slot_spacing = 10
     fixed_slots_count = 10  # Total 10 slots
 
-    # Generate 10 fixed slots in a single row
+    # Generate 10 fixed slots in the first row
     for i in range(fixed_slots_count):
         slot_x = fixed_slot_start_x + i * (fixed_slot_width + fixed_slot_spacing)
         slot_y = fixed_slot_start_y
         fixed_slots.append(pygame.Rect(slot_x, slot_y, fixed_slot_width, fixed_slot_height))
+    # Generate 10 fixed slots in the second row
+    for i in range(fixed_slots_count):
+        slot_x = fixed_slot_start_x + i * (fixed_slot_width + fixed_slot_spacing)
+        slot_y = fixed_slot_start_y2
+        fixed_slots.append(pygame.Rect(slot_x, slot_y, fixed_slot_width, fixed_slot_height))
 
 initialize_fixed_slots()
+
+def update_deck_file():
+    """Update deck.txt file to reflect the current deck_cards state."""
+    with open("D:\\Workspace\\GAME-PROJECT\\pygame-cardtest\\deck.txt", "w") as file:
+        for card_name, count in deck_main.items():
+            for _ in range(count):
+                file.write(card_name + "\n")
+    print("Deck file updated.")
 
 def draw_deck_page(screen, gacha, deck_cards):
     """Draw the deck page with cards arranged in the lower grid and handle card selection, dragging, and snapping."""
     global selected_card, card_offset
-    card_width = 80
-    card_height = 150
-    deck_start_x = 200
+    card_width = 100
+    card_height = 130
+    deck_start_x = 300
     deck_start_y = 400  # Starting y position for the deck cards
     card_spacing = 10
-    slots_per_row = 18
+    slots_per_row = 12
 
     # Draw deck slots in a 3-row grid (lower section)
     for row in range(3):
@@ -269,7 +284,7 @@ def draw_deck_page(screen, gacha, deck_cards):
         for card in gacha.cards:
             if card.name == card_name:
                 slot_rect = fixed_slots[slot_index]
-                card_image = pygame.transform.scale(card.image, (card_width, card_height))
+                card_image = pygame.transform.smoothscale(card.image, (120, 160))
                 screen.blit(card_image, (slot_rect.x, slot_rect.y))
                 break
 
@@ -277,7 +292,7 @@ def draw_deck_page(screen, gacha, deck_cards):
     card_hit_boxes = []  # List of tuples (rect, card_name)
     card_position = 0
 
-    for card_name in set(deck_cards.keys()):
+    for card_name in list(deck_cards.keys()):  # Iterate over a copy to modify deck_cards in-place
         row = card_position // slots_per_row
         col = card_position % slots_per_row
 
@@ -297,7 +312,7 @@ def draw_deck_page(screen, gacha, deck_cards):
                     card_rect = pygame.Rect(card_x, card_y, card_width, card_height)
                     card_hit_boxes.append((card_rect, card_name))
                     
-                    card_image = pygame.transform.scale(card.image, (card_width, card_height))
+                    card_image = pygame.transform.smoothscale(card.image, (card_width, card_height))
                     screen.blit(card_image, (card_x, card_y))
 
                     # Draw card count if > 1
@@ -318,11 +333,23 @@ def draw_deck_page(screen, gacha, deck_cards):
     if pygame.mouse.get_pressed()[0]:  # Left click for selecting or dragging
         mouse_pos = pygame.mouse.get_pos()
         if not selected_card:
-            # Start dragging if a card is clicked
+            # Start dragging if a card is clicked in the deck or fixed slots
             for card_rect, card_name in card_hit_boxes:
                 if card_rect.collidepoint(mouse_pos):
                     selected_card = card_name
                     card_offset = (mouse_pos[0] - card_rect.x, mouse_pos[1] - card_rect.y)
+                    break
+            # Check if a card in fixed slots is clicked
+            for slot_index, card_name in placed_cards.items():
+                slot_rect = fixed_slots[slot_index]
+                if slot_rect.collidepoint(mouse_pos):
+                    selected_card = card_name
+                    card_offset = (mouse_pos[0] - slot_rect.x, mouse_pos[1] - slot_rect.y)
+                    # Remove the card from placed slots and add it back to deck
+                    deck_cards[selected_card] = deck_cards.get(selected_card, 0) + 1
+                   
+                    del placed_cards[slot_index]
+                    update_deck_file()  # Update file after adding card back to deck
                     break
     else:
         # On mouse release, snap to the nearest fixed slot if applicable
@@ -333,13 +360,14 @@ def draw_deck_page(screen, gacha, deck_cards):
                     # Place card in slot and update deck count
                     placed_cards[slot_index] = selected_card
                     deck_cards[selected_card] -= 1
-                    if deck_cards[selected_card] == 0:
+                    
+                    if deck_cards[selected_card] <= 0:
                         del deck_cards[selected_card]
+                    update_deck_file()  # Update file after placing card in fixed slot
                     break
             selected_card = None  # Deselect card after placing
 
     return card_hit_boxes
-
 
 def load_deck():
     """Load deck from file and count unique cards."""
@@ -356,6 +384,7 @@ def load_deck():
     except FileNotFoundError:
         print("Deck file not found")
     return deck_main
+
 
 
 
@@ -495,7 +524,7 @@ while running:
                             f.write(pulled_card.name + "\n")
                     
                     game_state = SHOWTEN_STATE
-                    coin -= 1000
+                    coin -= 1000     
                     current_card_index = 0  # Reset card index for new pulls
             
             elif game_state == SHOWTEN_STATE:
