@@ -27,6 +27,8 @@ class battle_storage:
         ]
         self.battle_list = (random.choice(self.storage),random.choice(self.storage),random.choice(self.storage),random.choice(self.storage),random.choice(self.storage))
 
+        self.deck_storage = []
+
 class Player_stat:
     def __init__(self):
         self.hp = 1000
