@@ -11,32 +11,32 @@ class battle_card:
 class battle_storage:
     def __init__(self):
         self.storage = [
-            battle_card("Gaia Theyggdrasill",100,"collection\Gaia Theyggdrasill.png"),
-            battle_card("Hibaki yamanashi",100,"collection\Hibaki yamanashi.png"),
+            battle_card("Gaia Theyggdrasill",500,"collection\Gaia Theyggdrasill.png"),
+            battle_card("Hibaki yamanashi",500,"collection\Hibaki yamanashi.png"),
             battle_card("Hibani",100,"collection\Hibani.png"),
-            battle_card("Himego Kanade",100,"collection\Himego Kanade.png"),
-            battle_card("Jibril",100,"collection\Jibril.png"),
-            battle_card("Kaguya Hime",100,"collection\Kaguya Hime.png"),
+            battle_card("Himego Kanade",500,"collection\Himego Kanade.png"),
+            battle_card("Jibril",500,"collection\Jibril.png"),
+            battle_card("Kaguya Hime",500,"collection\Kaguya Hime.png"),
             battle_card("Kazuma",100,"collection\Kazuma.png"),
-            battle_card("Marry Eternalblood",100,"collection\Marry Eternalblood.png"),
-            battle_card("Rin shirozaki",100,"collection\Rin shirozaki.png"),
-            battle_card("Shizuo Valkyria",100,"collection\Shizuo Valkyria.png"),
-            battle_card("Shubaru yamato",100,"collection\Shubaru yamato.png"),
-            battle_card("THE HAM",100,"collection\THE HAM.png"),
-            battle_card("Traisy o' Reapper",100,"collection\Traisy o' Reapper.png"),
+            battle_card("Marry Eternalblood",300,"collection\Marry Eternalblood.png"),
+            battle_card("Rin shirozaki",200,"collection\Rin shirozaki.png"),
+            battle_card("Shizuo Valkyria",300,"collection\Shizuo Valkyria.png"),
+            battle_card("Shubaru yamato",200,"collection\Shubaru yamato.png"),
+            battle_card("THE HAM",900,"collection\THE HAM.png"),
+            battle_card("Traisy o' Reapper",200,"collection\Traisy o' Reapper.png"),
         ]
-        self.battle_list = (random.choice(self.storage),random.choice(self.storage),random.choice(self.storage),random.choice(self.storage),random.choice(self.storage))
 
         self.deck_storage = []
 
 class Player_stat:
     def __init__(self):
-        self.hp = 1000
+        self.hp = 3000
         self.deck = []
         self.field1 = []
         self.field2 = []
         self.field3 = []
         self.field4 = []
+        self.tome = []
 
     def add_card(self,card):
         self.deck.append(card)
@@ -50,8 +50,9 @@ class Player_stat:
             i = i + 1
 class Bot_stat:
     def __init__(self):
-        self.bot_hp = 1000
+        self.bot_hp = 3000
         self.bot_field1 = []
         self.bot_field2 = []
         self.bot_field3 = []
         self.bot_field4 = [] 
+        self.tome = []

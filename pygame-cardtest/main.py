@@ -92,6 +92,12 @@ except FileNotFoundError:
     print("Deck file not found")
 
 
+def display_text(screen, text, font_size, color, position):
+        font = pygame.font.Font(None, font_size)
+        text_surface = font.render(text, True, color)
+        text_rect = text_surface.get_rect(center=position)
+        screen.blit(text_surface, text_rect)
+
 # Function to draw buttons on the home page
 def draw_button(rect, text, hovered=False):
     color = NEXTA_COLOR if hovered else NEXT_HOVER_COLOR
@@ -292,6 +298,8 @@ def draw_deck_page(screen, gacha, deck_cards):
     deck_start_y = 400  # Starting y position for the deck cards
     card_spacing = 10
     slots_per_row = 12
+
+
 
     # Draw deck slots in a 3-row grid (lower section)
     for row in range(3):
@@ -705,61 +713,47 @@ while running:
         new_width, new_height = 120, 160
 #มาแก้ทีหลังให้เอาชื่อจากdeck
         my_battle_storage = battle_storage()
-        i = 0
-        for card in my_battle_storage.battle_list:
-            mycard = card.image
-            mycard = pygame.transform.smoothscale(mycard,(new_width,new_height))
-            image = Picture((450 + 150*i,730),mycard,card.power)
+        bot_battle_storage = battle_storage()
+        deck_sto = open("deck_save.txt","r")
+        for card in deck_sto:
+            card = card.strip()
+            for i in my_battle_storage.storage:
+                if card == i.name:
+                    my_battle_storage.deck_storage.append(i)
+        for i in range(5):
+            mycard = random.choice(my_battle_storage.deck_storage)
+            my_battle_storage.deck_storage.remove(mycard)
+            mycard_im = pygame.transform.smoothscale(mycard.image,(new_width,new_height))
+            image = Picture((450 + 150*i,730),mycard_im,mycard.power)
             player1.add_card(image)
-            i += 1
         
         location_click = None
-        for round in range(10):
-            print("round",round+1)
+        round = 1
+        check_end = True
+        while round <= 10 and check_end:
+            print("round",round)
             continue_play = True
             while continue_play:
                 battle_map = pygame.image.load("background/battle_map.jpg")
                 battle_map = pygame.transform.scale(battle_map, (SCREEN_WIDTH, SCREEN_HEIGHT))
                 screen.blit(battle_map, (0, 0))
+                display_text(screen, f"P_HP {player1.hp} / 3000", 50, (255, 255, 255), (150, 450))
+                display_text(screen, f"B_HP {battle_bot.bot_hp} / 3000", 50, (255, 255, 255), (1700, 450))
 
-                if player1.deck:
-                    for card in player1.deck:  
-                        card.draw(screen)
-                if player1.field1:  
-                    for card in player1.field1:  
-                        card.draw(screen)
-
-                if player1.field2:  
-                    for card in player1.field2:  
-                        card.draw(screen)
+                all_fields = [player1.deck, player1.field1, player1.field2, player1.field3, player1.field4,battle_bot.bot_field1, battle_bot.bot_field2, battle_bot.bot_field3, battle_bot.bot_field4]
                 
-                if player1.field3:  
-                    for card in player1.field3:  
-                        card.draw(screen)
-                
-                if player1.field4:  
-                    for card in player1.field4:  
-                        card.draw(screen)
-                
-                if battle_bot.bot_field1:
-                    for card in battle_bot.bot_field1:  
-                        card.draw(screen)
-
-                if battle_bot.bot_field2:  
-                    for card in battle_bot.bot_field2:  
-                        card.draw(screen)
-
-                if battle_bot.bot_field3:  
-                    for card in battle_bot.bot_field3:  
-                        card.draw(screen)
-                    
-                if battle_bot.bot_field4:  
-                    for card in battle_bot.bot_field4:  
-                        card.draw(screen)
-                    
-                if player1.field4:  
-                    for card in player1.field4:  
-                        card.draw(screen)
+                for field in all_fields:
+                    if field:
+                        for card in field:
+                            card.draw(screen)
+                if player1.tome:            
+                    player_tome = player1.tome[-1].image
+                    player_tome = pygame.transform.smoothscale(player_tome,(156, 208))
+                    screen.blit(player_tome, (128,641))
+                if battle_bot.tome:            
+                    battle_bot_tome = battle_bot.tome[-1].image
+                    battle_bot_tome = pygame.transform.smoothscale(battle_bot_tome,(156, 208))
+                    screen.blit(battle_bot_tome, (128,49))
 
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -789,147 +783,46 @@ while running:
                     player1.deck[location_click].update(mouse_pos)
                 pygame.display.flip()
             #ทำระบบเล่นฝั่งbot
-            num = 0
-            if battle_bot.bot_field1 == []:
-                num += 1
-            if battle_bot.bot_field2 == []:
-                num += 1
-            if battle_bot.bot_field3 == []:
-                num += 1
-            if battle_bot.bot_field4 == []:
-                num += 1
-            if num > 0:
-                random_add_card_num_bot = random.randint(1,num)
-                if random_add_card_num_bot == 1:
-                    random_add_card_num_bot = random.randint(1,num)
+            def add_card_to_field(battle_bot, field, position, storage):
+                if field == []:
+                    random_card = random.choice(storage)
+                    random_card_image = pygame.transform.smoothscale(random_card.image, (90, 120))
+                    random_card = Picture(position, random_card_image, random_card.power)
+                    field.append(random_card)
+
+            def add_random_cards(battle_bot, bot_battle_storage):
+                num_empty_fields = sum([
+                    1 for field in [battle_bot.bot_field1, battle_bot.bot_field2, 
+                                    battle_bot.bot_field3, battle_bot.bot_field4] if field == []
+                ])
+                
+                if num_empty_fields > 0:
+                    random_add_card_num_bot = random.randint(1, num_empty_fields)
+                    
                     for i in range(random_add_card_num_bot):
                         if battle_bot.bot_field1 == []:
-                            random_card = random.choice(my_battle_storage.storage)
-                            random_card_image = pygame.transform.smoothscale(random_card.image,(90,120))
-                            random_card = Picture((480,285),random_card_image,random_card.power)
-                            battle_bot.bot_field1.append(random_card)
-
+                            add_card_to_field(battle_bot, battle_bot.bot_field1, (480, 285), bot_battle_storage.storage)
                         elif battle_bot.bot_field2 == []:
-                            random_card = random.choice(my_battle_storage.storage)
-                            random_card_image = pygame.transform.smoothscale(random_card.image,(90,120))
-                            random_card = Picture((767,285),random_card_image,random_card.power)
-                            battle_bot.bot_field2.append(random_card)
-
+                            add_card_to_field(battle_bot, battle_bot.bot_field2, (767, 285), bot_battle_storage.storage)
                         elif battle_bot.bot_field3 == []:
-                            random_card = random.choice(my_battle_storage.storage)
-                            random_card_image = pygame.transform.smoothscale(random_card.image,(90,120))
-                            random_card = Picture((1052,285),random_card_image,random_card.power)
-                            battle_bot.bot_field3.append(random_card)
-
+                            add_card_to_field(battle_bot, battle_bot.bot_field3, (1052, 285), bot_battle_storage.storage)
                         elif battle_bot.bot_field4 == []:
-                            random_card = random.choice(my_battle_storage.storage)
-                            random_card_image = pygame.transform.smoothscale(random_card.image,(90,120))
-                            random_card = Picture((1342,285),random_card_image,random_card.power)
-                            battle_bot.bot_field4.append(random_card)
+                            add_card_to_field(battle_bot, battle_bot.bot_field4, (1342, 285), bot_battle_storage.storage)
 
-                elif random_add_card_num_bot == 2:
-                    random_add_card_num_bot = random.randint(1,num)
-                    for i in range(random_add_card_num_bot):
-                        if battle_bot.bot_field4 == []:
-                            random_card = random.choice(my_battle_storage.storage)
-                            random_card_image = pygame.transform.smoothscale(random_card.image,(90,120))
-                            random_card = Picture((1342,285),random_card_image,random_card.power)
-                            battle_bot.bot_field4.append(random_card)
-
-                        elif battle_bot.bot_field3 == []:
-                            random_card = random.choice(my_battle_storage.storage)
-                            random_card_image = pygame.transform.smoothscale(random_card.image,(90,120))
-                            random_card = Picture((1052,285),random_card_image,random_card.power)
-                            battle_bot.bot_field3.append(random_card)
-
-                        elif battle_bot.bot_field2 == []:
-                            random_card = random.choice(my_battle_storage.storage)
-                            random_card_image = pygame.transform.smoothscale(random_card.image,(90,120))
-                            random_card = Picture((767,285),random_card_image,random_card.power)
-                            battle_bot.bot_field2.append(random_card)
-
-                        elif battle_bot.bot_field1 == []:
-                            random_card = random.choice(my_battle_storage.storage)
-                            random_card_image = pygame.transform.smoothscale(random_card.image,(90,120))
-                            random_card = Picture((480,285),random_card_image,random_card.power)
-                            battle_bot.bot_field1.append(random_card)
-
-                elif random_add_card_num_bot == 3:
-                    random_add_card_num_bot = random.randint(1,num)
-                    for i in range(random_add_card_num_bot):
-                        if battle_bot.bot_field1 == []:
-                            random_card = random.choice(my_battle_storage.storage)
-                            random_card_image = pygame.transform.smoothscale(random_card.image,(90,120))
-                            random_card = Picture((480,285),random_card_image,random_card.power)
-                            battle_bot.bot_field1.append(random_card)
-
-                        elif battle_bot.bot_field3 == []:
-                            random_card = random.choice(my_battle_storage.storage)
-                            random_card_image = pygame.transform.smoothscale(random_card.image,(90,120))
-                            random_card = Picture((1052,285),random_card_image,random_card.power)
-                            battle_bot.bot_field3.append(random_card)
-
-                        elif battle_bot.bot_field2 == []:
-                            random_card = random.choice(my_battle_storage.storage)
-                            random_card_image = pygame.transform.smoothscale(random_card.image,(90,120))
-                            random_card = Picture((767,285),random_card_image,random_card.power)
-                            battle_bot.bot_field2.append(random_card)
-
-                        elif battle_bot.bot_field4 == []:
-                            random_card = random.choice(my_battle_storage.storage)
-                            random_card_image = pygame.transform.smoothscale(random_card.image,(90,120))
-                            random_card = Picture((1342,285),random_card_image,random_card.power)
-                            battle_bot.bot_field4.append(random_card)
-
-                elif random_add_card_num_bot == 4:
-                    random_add_card_num_bot = random.randint(1,num)
-                    for i in range(random_add_card_num_bot):
-                        if battle_bot.bot_field4 == []:
-                            random_card = random.choice(my_battle_storage.storage)
-                            random_card_image = pygame.transform.smoothscale(random_card.image,(90,120))
-                            random_card = Picture((1342,285),random_card_image,random_card.power)
-                            battle_bot.bot_field4.append(random_card)
-
-                        elif battle_bot.bot_field2 == []:
-                            random_card = random.choice(my_battle_storage.storage)
-                            random_card_image = pygame.transform.smoothscale(random_card.image,(90,120))
-                            random_card = Picture((767,285),random_card_image,random_card.power)
-                            battle_bot.bot_field2.append(random_card)
-
-                        elif battle_bot.bot_field3 == []:
-                            random_card = random.choice(my_battle_storage.storage)
-                            random_card_image = pygame.transform.smoothscale(random_card.image,(90,120))
-                            random_card = Picture((1052,285),random_card_image,random_card.power)
-                            battle_bot.bot_field3.append(random_card)
-
-                        elif battle_bot.bot_field1 == []:
-                            random_card = random.choice(my_battle_storage.storage)
-                            random_card_image = pygame.transform.smoothscale(random_card.image,(90,120))
-                            random_card = Picture((480,285),random_card_image,random_card.power)
-                            battle_bot.bot_field1.append(random_card)
-
+            # Usage
+            add_random_cards(battle_bot, bot_battle_storage)
             
             continue_play_bot = True    
             while continue_play_bot:
-                if battle_bot.bot_field1:
-                    for card in battle_bot.bot_field1:  
-                        card.draw(screen)
-                if battle_bot.bot_field2:  
-                    for card in battle_bot.bot_field2:  
-                        card.draw(screen)
+                fields_to_draw = [battle_bot.bot_field1, battle_bot.bot_field2, battle_bot.bot_field3, battle_bot.bot_field4,player1.field4]
 
-                if battle_bot.bot_field3:  
-                    for card in battle_bot.bot_field3:  
-                        card.draw(screen)
-                
-                if battle_bot.bot_field4:  
-                    for card in battle_bot.bot_field4:  
-                        card.draw(screen)
-                
-                if player1.field4:  
-                    for card in player1.field4:  
-                        card.draw(screen)
-                        
+                # วาดการ์ดในแต่ละฟิลด์
+                for field in fields_to_draw:
+                    if field:  # ตรวจสอบว่าฟิลด์ไม่ว่าง
+                        for card in field:
+                            card.draw(screen)
+
+                pygame.display.flip()       
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         pygame.quit()
@@ -939,24 +832,86 @@ while running:
                         if event.key == pygame.K_RETURN:  # K_RETURN คือปุ่ม Enter
                             continue_play_bot = not continue_play_bot
 
+            def process_battle(player_field, bot_field, player_hp, bot_hp, player_tome, bot_tome):
+                # กรณีที่ player มีการ์ด แต่ bot ไม่มีการ์ด
+                if player_field != [] and bot_field == []:
+                    bot_hp -= player_field[0].power
 
-            if player1.hp <= 0 and battle_bot.hp <= 0:
-                print("draw")
+                # กรณีที่ bot มีการ์ด แต่ player ไม่มีการ์ด
+                elif player_field == [] and bot_field != []:
+                    player_hp -= bot_field[0].power
+                # กรณีว่างคู่
+                elif player_field == [] and bot_field == []:
+                    pass
+                # กรณีที่การ์ดของทั้งคู่มีพลังเท่ากัน
+                elif player_field[0].power == bot_field[0].power:
+                    player_tome.append(player_field[0])
+                    bot_tome.append(bot_field[0])
+                    player_field.clear()
+                    bot_field.clear()
+
+                # กรณีที่การ์ดของ player มีพลังมากกว่า bot
+                elif player_field[0].power > bot_field[0].power:
+                    bot_hp -= player_field[0].power - bot_field[0].power
+                    bot_tome.append(bot_field[0])
+                    bot_field.clear()
+
+                # กรณีที่การ์ดของ bot มีพลังมากกว่า player
+                elif player_field[0].power < bot_field[0].power:
+                    player_hp -= bot_field[0].power - player_field[0].power
+                    player_tome.append(player_field[0])
+                    player_field.clear()
+
+                return player_hp, bot_hp
+
+            # เรียกใช้ฟังก์ชันสำหรับฟิลด์ 1-4
+            player1.hp, battle_bot.bot_hp = process_battle(player1.field1, battle_bot.bot_field1, player1.hp, battle_bot.bot_hp, player1.tome, battle_bot.tome)
+            player1.hp, battle_bot.bot_hp = process_battle(player1.field2, battle_bot.bot_field2, player1.hp, battle_bot.bot_hp, player1.tome, battle_bot.tome)
+            player1.hp, battle_bot.bot_hp = process_battle(player1.field3, battle_bot.bot_field3, player1.hp, battle_bot.bot_hp, player1.tome, battle_bot.tome)
+            player1.hp, battle_bot.bot_hp = process_battle(player1.field4, battle_bot.bot_field4, player1.hp, battle_bot.bot_hp, player1.tome, battle_bot.tome)
+            
+            def end_game_screen(screen, message, game_state):
+                display_text(screen, message, 100, (255, 255, 255), (960, 450))
+                pygame.display.flip()
+                end = True
+                while end:
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            pygame.quit()
+                            sys.exit()
+                        if event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_RETURN:  # K_RETURN คือปุ่ม Enter
+                                end = False
+                                return game_state
+
+            # การเช็คเงื่อนไขการจบเกม
+            if player1.hp <= 0 and battle_bot.bot_hp <= 0:
+                game_state = end_game_screen(screen, "Draw", HOME)
+                check_end = False
             elif player1.hp <= 0:
-                print("lose")
+                game_state = end_game_screen(screen, "Lose", HOME)
+                check_end = False
             elif battle_bot.bot_hp <= 0:
-                print("win")
-
-
+                game_state = end_game_screen(screen, "Win", HOME)
+                check_end = False
+            elif player1.hp >= 0 and battle_bot.bot_hp >= 0 and round == 9:
+                game_state = end_game_screen(screen, "Draw", HOME)
+                check_end = False
 
             if len(player1.deck) < 7:
-                random_card = random.choice(my_battle_storage.storage)
-                random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
-                loca_add = len(player1.deck) - 1
-                random_card = Picture((450 + 150*loca_add,730),random_card_image,random_card.power)
-                player1.add_card(random_card)
+                if my_battle_storage.deck_storage:
+                    random_card = random.choice(my_battle_storage.deck_storage)
+                    my_battle_storage.deck_storage.remove(random_card)
+                    random_card_image = pygame.transform.smoothscale(random_card.image,(new_width,new_height))
+                    loca_add = len(player1.deck) - 1
+                    random_card = Picture((450 + 150*loca_add,730),random_card_image,random_card.power)
+                    player1.add_card(random_card)
+                    
             else:
                 print("your deck is full")
+            round += 1
+        
+
             
             
             
