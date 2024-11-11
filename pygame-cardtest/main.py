@@ -98,6 +98,28 @@ def display_text(screen, text, font_size, color, position):
         text_rect = text_surface.get_rect(center=position)
         screen.blit(text_surface, text_rect)
 
+def render_battle_screen(screen, player1, battle_bot, round, screen_width, screen_height):
+    battle_map = pygame.image.load("background/battle_map.jpg")
+    battle_map = pygame.transform.scale(battle_map, (screen_width, screen_height))
+    screen.blit(battle_map, (0, 0))
+    
+    display_text(screen, f"P_HP {player1.hp} / 3000", 50, (255, 255, 255), (150, 450))
+    display_text(screen, f"B_HP {battle_bot.bot_hp} / 3000", 50, (255, 255, 255), (1700, 450))
+    display_text(screen, f"Round {round}", 100, (255, 255, 255), (960, 450))
+    
+    all_fields = [player1.deck, player1.field1, player1.field2, player1.field3, player1.field4,battle_bot.bot_field1, battle_bot.bot_field2, battle_bot.bot_field3, battle_bot.bot_field4]
+    for field in all_fields:
+        if field:
+            for card in field:
+                card.draw(screen)
+    if player1.tome:
+        player_tome_image = pygame.transform.smoothscale(player1.tome[-1].image, (156, 208))
+        screen.blit(player_tome_image, (128, 641))
+    if battle_bot.tome:
+        bot_tome_image = pygame.transform.smoothscale(battle_bot.tome[-1].image, (156, 208))
+        screen.blit(bot_tome_image, (128, 49))
+
+
 # Function to draw buttons on the home page
 def draw_button(rect, text, hovered=False):
     color = NEXTA_COLOR if hovered else NEXT_HOVER_COLOR
@@ -696,6 +718,7 @@ while running:
                             player1.field4.append(player1.deck[location_click])
                         player1.deck.remove(player1.deck[location_click])
                         player1.update_deck_positions()
+                        player1.continue_play = False
                         break
                     i += 1
                 else:
@@ -731,38 +754,14 @@ while running:
         round = 1
         check_end = True
         while round <= 10 and check_end:
-            print("round",round)
-            continue_play = True
-            while continue_play:
-                battle_map = pygame.image.load("background/battle_map.jpg")
-                battle_map = pygame.transform.scale(battle_map, (SCREEN_WIDTH, SCREEN_HEIGHT))
-                screen.blit(battle_map, (0, 0))
-                display_text(screen, f"P_HP {player1.hp} / 3000", 50, (255, 255, 255), (150, 450))
-                display_text(screen, f"B_HP {battle_bot.bot_hp} / 3000", 50, (255, 255, 255), (1700, 450))
-
-                all_fields = [player1.deck, player1.field1, player1.field2, player1.field3, player1.field4,battle_bot.bot_field1, battle_bot.bot_field2, battle_bot.bot_field3, battle_bot.bot_field4]
-                
-                for field in all_fields:
-                    if field:
-                        for card in field:
-                            card.draw(screen)
-                if player1.tome:            
-                    player_tome = player1.tome[-1].image
-                    player_tome = pygame.transform.smoothscale(player_tome,(156, 208))
-                    screen.blit(player_tome, (128,641))
-                if battle_bot.tome:            
-                    battle_bot_tome = battle_bot.tome[-1].image
-                    battle_bot_tome = pygame.transform.smoothscale(battle_bot_tome,(156, 208))
-                    screen.blit(battle_bot_tome, (128,49))
+            player1.continue_play = True
+            while player1.continue_play:
+                render_battle_screen(screen, player1, battle_bot, round, SCREEN_WIDTH, SCREEN_HEIGHT)
 
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         pygame.quit()
                         sys.exit()
-                    
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_RETURN:  # K_RETURN คือปุ่ม Enter
-                            continue_play = not continue_play
 
                     if event.type == pygame.MOUSEBUTTONDOWN: # ตรวจจับการคลิกเมาส์
                         mouse_pos = pygame.mouse.get_pos()
@@ -782,6 +781,9 @@ while running:
                 if location_click is not None and location_click < len(player1.deck):
                     player1.deck[location_click].update(mouse_pos)
                 pygame.display.flip()
+            render_battle_screen(screen, player1, battle_bot, round, SCREEN_WIDTH, SCREEN_HEIGHT)
+            pygame.display.flip()
+            
             #ทำระบบเล่นฝั่งbot
             def add_card_to_field(battle_bot, field, position, storage):
                 if field == []:

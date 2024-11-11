@@ -37,6 +37,7 @@ class Player_stat:
         self.field3 = []
         self.field4 = []
         self.tome = []
+        self.continue_play = True
 
     def add_card(self,card):
         self.deck.append(card)
