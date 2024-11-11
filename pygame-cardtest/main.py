@@ -98,6 +98,31 @@ def display_text(screen, text, font_size, color, position):
         text_rect = text_surface.get_rect(center=position)
         screen.blit(text_surface, text_rect)
 
+def render_battle_screen(screen, player1, battle_bot, round, screen_width, screen_height):
+    battle_map = pygame.image.load("background/battle_map.jpg")
+    battle_map = pygame.transform.scale(battle_map, (screen_width, screen_height))
+    screen.blit(battle_map, (0, 0))
+    
+    display_text(screen, f"P_HP {player1.hp} / 3000", 50, (255, 255, 255), (150, 450))
+    display_text(screen, f"B_HP {battle_bot.bot_hp} / 3000", 50, (255, 255, 255), (1700, 450))
+    display_text(screen, f"Round {round}", 100, (255, 255, 255), (960, 450))
+    
+    all_fields = [player1.deck, player1.field1, player1.field2, player1.field3, player1.field4,battle_bot.bot_field1, battle_bot.bot_field2, battle_bot.bot_field3, battle_bot.bot_field4]
+    
+    for field in all_fields:
+        if field:
+            for card in field:
+                card.draw(screen)
+    
+    # แสดงการ์ดใน tome ของ player1 และ battle_bot
+    if player1.tome:
+        player_tome_image = pygame.transform.smoothscale(player1.tome[-1].image, (156, 208))
+        screen.blit(player_tome_image, (128, 641))
+    if battle_bot.tome:
+        bot_tome_image = pygame.transform.smoothscale(battle_bot.tome[-1].image, (156, 208))
+        screen.blit(bot_tome_image, (128, 49))
+
+
 # Function to draw buttons on the home page
 def draw_button(rect, text, hovered=False):
     color = NEXTA_COLOR if hovered else NEXT_HOVER_COLOR
@@ -696,6 +721,7 @@ while running:
                             player1.field4.append(player1.deck[location_click])
                         player1.deck.remove(player1.deck[location_click])
                         player1.update_deck_positions()
+                        player1.continue_play = not player1.continue_play
                         break
                     i += 1
                 else:
@@ -715,6 +741,7 @@ while running:
         my_battle_storage = battle_storage()
         bot_battle_storage = battle_storage()
         deck_sto = open("deck_save.txt","r")
+        
         for card in deck_sto:
             card = card.strip()
             for i in my_battle_storage.storage:
@@ -731,29 +758,9 @@ while running:
         round = 1
         check_end = True
         while round <= 10 and check_end:
-            print("round",round)
-            continue_play = True
-            while continue_play:
-                battle_map = pygame.image.load("background/battle_map.jpg")
-                battle_map = pygame.transform.scale(battle_map, (SCREEN_WIDTH, SCREEN_HEIGHT))
-                screen.blit(battle_map, (0, 0))
-                display_text(screen, f"P_HP {player1.hp} / 3000", 50, (255, 255, 255), (150, 450))
-                display_text(screen, f"B_HP {battle_bot.bot_hp} / 3000", 50, (255, 255, 255), (1700, 450))
-
-                all_fields = [player1.deck, player1.field1, player1.field2, player1.field3, player1.field4,battle_bot.bot_field1, battle_bot.bot_field2, battle_bot.bot_field3, battle_bot.bot_field4]
-                
-                for field in all_fields:
-                    if field:
-                        for card in field:
-                            card.draw(screen)
-                if player1.tome:            
-                    player_tome = player1.tome[-1].image
-                    player_tome = pygame.transform.smoothscale(player_tome,(156, 208))
-                    screen.blit(player_tome, (128,641))
-                if battle_bot.tome:            
-                    battle_bot_tome = battle_bot.tome[-1].image
-                    battle_bot_tome = pygame.transform.smoothscale(battle_bot_tome,(156, 208))
-                    screen.blit(battle_bot_tome, (128,49))
+            player1.continue_play = True
+            while player1.continue_play:
+                render_battle_screen(screen, player1, battle_bot, round, SCREEN_WIDTH, SCREEN_HEIGHT)
 
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -762,7 +769,7 @@ while running:
                     
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_RETURN:  # K_RETURN คือปุ่ม Enter
-                            continue_play = not continue_play
+                            player1.continue_play = not player1.continue_play
 
                     if event.type == pygame.MOUSEBUTTONDOWN: # ตรวจจับการคลิกเมาส์
                         mouse_pos = pygame.mouse.get_pos()
@@ -782,55 +789,73 @@ while running:
                 if location_click is not None and location_click < len(player1.deck):
                     player1.deck[location_click].update(mouse_pos)
                 pygame.display.flip()
+            render_battle_screen(screen, player1, battle_bot, round, SCREEN_WIDTH, SCREEN_HEIGHT)
+            
             #ทำระบบเล่นฝั่งbot
-            def add_card_to_field(battle_bot, field, position, storage):
+            def add_card_to_field(field, position, storage):
                 if field == []:
                     random_card = random.choice(storage)
                     random_card_image = pygame.transform.smoothscale(random_card.image, (90, 120))
                     random_card = Picture(position, random_card_image, random_card.power)
                     field.append(random_card)
 
-            def add_random_cards(battle_bot, bot_battle_storage):
-                num_empty_fields = sum([
-                    1 for field in [battle_bot.bot_field1, battle_bot.bot_field2, 
-                                    battle_bot.bot_field3, battle_bot.bot_field4] if field == []
-                ])
-                
-                if num_empty_fields > 0:
-                    random_add_card_num_bot = random.randint(1, num_empty_fields)
-                    
-                    for i in range(random_add_card_num_bot):
-                        if battle_bot.bot_field1 == []:
-                            add_card_to_field(battle_bot, battle_bot.bot_field1, (480, 285), bot_battle_storage.storage)
-                        elif battle_bot.bot_field2 == []:
-                            add_card_to_field(battle_bot, battle_bot.bot_field2, (767, 285), bot_battle_storage.storage)
-                        elif battle_bot.bot_field3 == []:
-                            add_card_to_field(battle_bot, battle_bot.bot_field3, (1052, 285), bot_battle_storage.storage)
-                        elif battle_bot.bot_field4 == []:
-                            add_card_to_field(battle_bot, battle_bot.bot_field4, (1342, 285), bot_battle_storage.storage)
-
-            # Usage
-            add_random_cards(battle_bot, bot_battle_storage)
             
-            continue_play_bot = True    
-            while continue_play_bot:
-                fields_to_draw = [battle_bot.bot_field1, battle_bot.bot_field2, battle_bot.bot_field3, battle_bot.bot_field4,player1.field4]
-
-                # วาดการ์ดในแต่ละฟิลด์
-                for field in fields_to_draw:
-                    if field:  # ตรวจสอบว่าฟิลด์ไม่ว่าง
-                        for card in field:
-                            card.draw(screen)
-
+                    
+            if battle_bot.bot_field1 == []:
+                add_card_to_field(battle_bot.bot_field1, (480, 285), bot_battle_storage.storage)
+            elif battle_bot.bot_field2 == []:
+                add_card_to_field(battle_bot.bot_field2, (767, 285), bot_battle_storage.storage)
+            elif battle_bot.bot_field3 == []:
+                add_card_to_field(battle_bot.bot_field3, (1052, 285), bot_battle_storage.storage)
+            elif battle_bot.bot_field4 == []:
+                add_card_to_field(battle_bot.bot_field4, (1342, 285), bot_battle_storage.storage)
+            #ระบบเลือการ์ดตีของฝั่งผู้เล่น
+            continue_play_select_card = True
+            deck_select_card = None
+            bot_select_card = None   
+            RED = (255, 0, 0)
+            P_rect_x, P_rect_y, P_rect_width, P_rect_height = None, None, 100, 130
+            B_rect_x, B_rect_y, B_rect_width, B_rect_height = None, None, 100, 130 
+            while continue_play_select_card:
+                render_battle_screen(screen, player1, battle_bot, round, SCREEN_WIDTH, SCREEN_HEIGHT)
+                if P_rect_x and P_rect_y:
+                    pygame.draw.rect(screen, RED, (P_rect_x, P_rect_y, P_rect_width, P_rect_height), 5)
+                if B_rect_x and B_rect_y:
+                    pygame.draw.rect(screen, RED, (B_rect_x, B_rect_y, B_rect_width, B_rect_height), 5)
                 pygame.display.flip()       
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         pygame.quit()
                         sys.exit()
-                    
+
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        mouse_pos = pygame.mouse.get_pos()
+                        x_pos, y_pos = mouse_pos
+    
+                        bot_select_card = battle_bot.bot_field1 if 480 <= x_pos <= 570 and 285 <= y_pos <=405 and battle_bot.bot_field1 != [] else bot_select_card
+                        bot_select_card = battle_bot.bot_field2 if 767 <= x_pos <= 857 and 285 <= y_pos <=405 and battle_bot.bot_field2 != [] else bot_select_card
+                        bot_select_card = battle_bot.bot_field3 if 1052 <= x_pos <= 1142 and 285 <= y_pos <=405 and battle_bot.bot_field3 != [] else bot_select_card  
+                        bot_select_card = battle_bot.bot_field4 if 1342 <= x_pos <= 1432 and 285 <= y_pos <=405 and battle_bot.bot_field4 != [] else bot_select_card
+
+                        B_rect_x, B_rect_y = (475,280) if 480 <= x_pos <= 570 and 285 <= y_pos <=405 and battle_bot.bot_field1 != [] else (B_rect_x, B_rect_y)
+                        B_rect_x, B_rect_y = (762,280) if 767 <= x_pos <= 857 and 285 <= y_pos <=405 and battle_bot.bot_field2 != [] else (B_rect_x, B_rect_y)
+                        B_rect_x, B_rect_y = (1047,280) if 1052 <= x_pos <= 1142 and 285 <= y_pos <=405 and battle_bot.bot_field3 != [] else (B_rect_x, B_rect_y)
+                        B_rect_x, B_rect_y = (1337,280) if 1342 <= x_pos <= 1432 and 285 <= y_pos <=405 and battle_bot.bot_field4 != [] else (B_rect_x, B_rect_y)
+
+                        deck_select_card = player1.field1 if 480 <= x_pos <= 570 and 502 <= y_pos <= 622 and player1.field1 != [] else deck_select_card
+                        deck_select_card = player1.field2 if 767 <= x_pos <= 857 and 502 <= y_pos <= 622 and player1.field2 != [] else deck_select_card
+                        deck_select_card = player1.field3 if 1052 <= x_pos <= 1142 and 502 <= y_pos <= 622 and player1.field3 != [] else deck_select_card    
+                        deck_select_card = player1.field4 if 1342 <= x_pos <= 1432 and 502 <= y_pos <= 622 and player1.field4 != [] else deck_select_card
+
+                        P_rect_x, P_rect_y = (475,497) if 480 <= x_pos <= 570 and 502 <= y_pos <= 622 and player1.field1 != [] else (P_rect_x, P_rect_y)
+                        P_rect_x, P_rect_y = (762,497) if 767 <= x_pos <= 857 and 502 <= y_pos <= 622 and player1.field2 != [] else (P_rect_x, P_rect_y)
+                        P_rect_x, P_rect_y = (1047,497) if 1052 <= x_pos <= 1142 and 502 <= y_pos <= 622 and player1.field3 != [] else (P_rect_x, P_rect_y)
+                        P_rect_x, P_rect_y = (1337,497) if 1342 <= x_pos <= 1432 and 502 <= y_pos <= 622 and player1.field4 != [] else (P_rect_x, P_rect_y)
+
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_RETURN:  # K_RETURN คือปุ่ม Enter
-                            continue_play_bot = not continue_play_bot
+                            continue_play_select_card = not continue_play_select_card
+                
 
             def process_battle(player_field, bot_field, player_hp, bot_hp, player_tome, bot_tome):
                 # กรณีที่ player มีการ์ด แต่ bot ไม่มีการ์ด
@@ -864,11 +889,8 @@ while running:
 
                 return player_hp, bot_hp
 
-            # เรียกใช้ฟังก์ชันสำหรับฟิลด์ 1-4
-            player1.hp, battle_bot.bot_hp = process_battle(player1.field1, battle_bot.bot_field1, player1.hp, battle_bot.bot_hp, player1.tome, battle_bot.tome)
-            player1.hp, battle_bot.bot_hp = process_battle(player1.field2, battle_bot.bot_field2, player1.hp, battle_bot.bot_hp, player1.tome, battle_bot.tome)
-            player1.hp, battle_bot.bot_hp = process_battle(player1.field3, battle_bot.bot_field3, player1.hp, battle_bot.bot_hp, player1.tome, battle_bot.tome)
-            player1.hp, battle_bot.bot_hp = process_battle(player1.field4, battle_bot.bot_field4, player1.hp, battle_bot.bot_hp, player1.tome, battle_bot.tome)
+            # คำนวนเลือด
+            player1.hp, battle_bot.bot_hp = process_battle(deck_select_card, bot_select_card, player1.hp, battle_bot.bot_hp, player1.tome, battle_bot.tome)
             
             def end_game_screen(screen, message, game_state):
                 display_text(screen, message, 100, (255, 255, 255), (960, 450))
@@ -883,7 +905,61 @@ while running:
                             if event.key == pygame.K_RETURN:  # K_RETURN คือปุ่ม Enter
                                 end = False
                                 return game_state
+            #ระะบบbot ตี player
+            all_bot_field = [battle_bot.bot_field1, battle_bot.bot_field2, battle_bot.bot_field3, battle_bot.bot_field4]
+            all_player_field = [player1.field1, player1.field2, player1.field3, player1.field4,]
+            bot_attacker = battle_bot.bot_field1
+            player_defender = player1.field1
+            for attack in all_bot_field:
+                if bot_attacker == [] or attack == []:
+                    bot_attacker = attack
+                elif bot_attacker[0].power < attack[0].power:
+                    bot_attacker = attack
+                
+            for defend in all_player_field:
+                if player_defender == [] or defend == []:
+                    player_defender = defend
+                elif player_defender[0].power > defend[0].power:
+                    player_defender = defend
+            if bot_attacker == []:
+                pass
+            elif player_defender == []:
+                player1.hp -= bot_attacker[0].power
+            elif bot_attacker[0].power < player_defender[0].power:
+                pass
+            else:
+                P_rect_x, P_rect_y, P_rect_width, P_rect_height = None, None, 100, 130
+                B_rect_x, B_rect_y, B_rect_width, B_rect_height = None, None, 100, 130
+                if bot_attacker == battle_bot.bot_field1:
+                    B_rect_x, B_rect_y = (475,280)
+                elif bot_attacker == battle_bot.bot_field2:
+                    B_rect_x, B_rect_y = (762,280)
+                elif bot_attacker == battle_bot.bot_field3:
+                    B_rect_x, B_rect_y = (1047,280)
+                elif bot_attacker == battle_bot.bot_field4:
+                    B_rect_x, B_rect_y = (1337,280)
 
+                if player_defender == player1.field1:
+                    P_rect_x, P_rect_y = (475,497)
+                elif player_defender == player1.field2:
+                    P_rect_x, P_rect_y = (762,497)
+                elif player_defender == player1.field3:
+                    P_rect_x, P_rect_y = (1047,497)
+                elif player_defender == player1.field4:
+                    P_rect_x, P_rect_y = (1337,497)
+                pygame.draw.rect(screen, RED, (P_rect_x, P_rect_y, P_rect_width, P_rect_height), 5)
+                pygame.draw.rect(screen, RED, (B_rect_x, B_rect_y, B_rect_width, B_rect_height), 5)
+                next_turn = True
+                while next_turn:
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            pygame.quit()
+                            sys.exit()
+                        if event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_RETURN:  # K_RETURN คือปุ่ม Enter
+                                next_turn = False
+                player1.hp, battle_bot.bot_hp = process_battle(player_defender, bot_attacker, player1.hp, battle_bot.bot_hp, player1.tome, battle_bot.tome)
+            
             # การเช็คเงื่อนไขการจบเกม
             if player1.hp <= 0 and battle_bot.bot_hp <= 0:
                 game_state = end_game_screen(screen, "Draw", HOME)
@@ -897,6 +973,9 @@ while running:
             elif player1.hp >= 0 and battle_bot.bot_hp >= 0 and round == 9:
                 game_state = end_game_screen(screen, "Draw", HOME)
                 check_end = False
+
+            
+
 
             if len(player1.deck) < 7:
                 if my_battle_storage.deck_storage:
