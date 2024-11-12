@@ -57,3 +57,55 @@ class Bot_stat:
         self.bot_field3 = []
         self.bot_field4 = [] 
         self.tome = []
+
+    def check_got_click(self,x_pos,y_pos):
+        bot_select_card = None
+        bot_select_card = self.bot_field1 if 480 <= x_pos <= 570 and 285 <= y_pos <=405 and self.bot_field1 != [] else bot_select_card
+        bot_select_card = self.bot_field2 if 767 <= x_pos <= 857 and 285 <= y_pos <=405 and self.bot_field2 != [] else bot_select_card
+        bot_select_card = self.bot_field3 if 1052 <= x_pos <= 1142 and 285 <= y_pos <=405 and self.bot_field3 != [] else bot_select_card  
+        bot_select_card = self.bot_field4 if 1342 <= x_pos <= 1432 and 285 <= y_pos <=405 and self.bot_field4 != [] else bot_select_card
+        return bot_select_card
+    
+    def check_got_click_frame(self,x_pos,y_pos):
+        B_rect_x, B_rect_y = None,None
+        B_rect_x, B_rect_y = (475,280) if 480 <= x_pos <= 570 and 285 <= y_pos <=405 and self.bot_field1 != [] else (B_rect_x, B_rect_y)
+        B_rect_x, B_rect_y = (762,280) if 767 <= x_pos <= 857 and 285 <= y_pos <=405 and self.bot_field2 != [] else (B_rect_x, B_rect_y)
+        B_rect_x, B_rect_y = (1047,280) if 1052 <= x_pos <= 1142 and 285 <= y_pos <=405 and self.bot_field3 != [] else (B_rect_x, B_rect_y)
+        B_rect_x, B_rect_y = (1337,280) if 1342 <= x_pos <= 1432 and 285 <= y_pos <=405 and self.bot_field4 != [] else (B_rect_x, B_rect_y)
+
+        return B_rect_x,B_rect_y
+    
+class Process_battle:
+    def process_battle(self,player_field, bot_field, player_hp, bot_hp, player_tome, bot_tome):
+                # กรณีที่ player มีการ์ด แต่ bot ไม่มีการ์ด
+                if player_field != [] and bot_field == []:
+                    bot_hp -= player_field[0].power
+
+                # กรณีที่ bot มีการ์ด แต่ player ไม่มีการ์ด
+                elif player_field == [] and bot_field != []:
+                    player_hp -= bot_field[0].power
+                # กรณีว่างคู่
+                elif player_field == [] and bot_field == []:
+                    pass
+                # กรณีที่การ์ดของทั้งคู่มีพลังเท่ากัน
+                elif player_field[0].power == bot_field[0].power:
+                    player_tome.append(player_field[0])
+                    bot_tome.append(bot_field[0])
+                    player_field.clear()
+                    bot_field.clear()
+
+                # กรณีที่การ์ดของ player มีพลังมากกว่า bot
+                elif player_field[0].power > bot_field[0].power:
+                    bot_hp -= player_field[0].power - bot_field[0].power
+                    bot_tome.append(bot_field[0])
+                    bot_field.clear()
+
+                # กรณีที่การ์ดของ bot มีพลังมากกว่า player
+                elif player_field[0].power < bot_field[0].power:
+                    player_hp -= bot_field[0].power - player_field[0].power
+                    player_tome.append(player_field[0])
+                    player_field.clear()
+
+                return player_hp, bot_hp
+
+        
