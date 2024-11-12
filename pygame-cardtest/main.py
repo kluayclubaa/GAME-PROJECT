@@ -809,7 +809,7 @@ while running:
                 add_card_to_field(battle_bot.bot_field3, (1052, 285), bot_battle_storage.storage)
             elif battle_bot.bot_field4 == []:
                 add_card_to_field(battle_bot.bot_field4, (1342, 285), bot_battle_storage.storage)
-            #ระบบเลือการ์ดตีของฝั่งผู้เล่น
+            #ระบบเลือกการ์ดตีของฝั่งผู้เล่น
             continue_play_select_card = True
             deck_select_card = None
             bot_select_card = None   
@@ -890,7 +890,8 @@ while running:
                 return player_hp, bot_hp
 
             # คำนวนเลือด
-            player1.hp, battle_bot.bot_hp = process_battle(deck_select_card, bot_select_card, player1.hp, battle_bot.bot_hp, player1.tome, battle_bot.tome)
+            if deck_select_card != None and bot_select_card != None:
+                player1.hp, battle_bot.bot_hp = process_battle(deck_select_card, bot_select_card, player1.hp, battle_bot.bot_hp, player1.tome, battle_bot.tome)
             
             def end_game_screen(screen, message, game_state):
                 display_text(screen, message, 100, (255, 255, 255), (960, 450))
