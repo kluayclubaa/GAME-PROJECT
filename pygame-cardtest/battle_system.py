@@ -107,5 +107,3 @@ class Process_battle:
                     player_field.clear()
 
                 return player_hp, bot_hp
-
-        
