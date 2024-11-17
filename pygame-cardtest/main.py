@@ -9,7 +9,7 @@ from battle_system import Player_stat
 from battle_system import battle_storage
 from battle_system import Bot_stat
 from battle_system import Process_battle
-from bubble import Bubble
+
 
 
 # Initialize pygame
@@ -28,7 +28,7 @@ NEXTA_COLOR=(70, 150, 200)
 
 
 NEXT_HOVER_COLOR = (0, 0, 255)  # Blue color
-bubbles = [Bubble() for _ in range(100)]
+
 HOVER_COLOR = (100, 100, 200)
 card_width = 200
 card_height = 400
