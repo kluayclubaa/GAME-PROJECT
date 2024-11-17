@@ -3,12 +3,13 @@ import random
 from gacha import GachaSystem  # Import your Gacha system
 import os
 import sys
-
+from deck import DeckManager
 
 from battle_system import Player_stat
 from battle_system import battle_storage
 from battle_system import Bot_stat
 from battle_system import Process_battle
+from bubble import Bubble
 
 
 # Initialize pygame
@@ -27,7 +28,7 @@ NEXTA_COLOR=(70, 150, 200)
 
 
 NEXT_HOVER_COLOR = (0, 0, 255)  # Blue color
-
+bubbles = [Bubble() for _ in range(100)]
 HOVER_COLOR = (100, 100, 200)
 card_width = 200
 card_height = 400
@@ -48,6 +49,8 @@ pygame.display.set_caption("Card Game Home Page")
 
 font = pygame.font.Font(pygame.font.match_font('impact'), 60)
 font_coin=pygame.font.Font(pygame.font.match_font('MN Pu Khem'),32)
+font_coin1=pygame.font.Font(pygame.font.match_font('MN Pu Khem'),128)
+
 
 # Button setup
 button_width, button_height = 400, 50
@@ -60,6 +63,8 @@ collection_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 800
 Ten_pills_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 800, button_width, button_height))
 next_button_rect = pygame.Rect((1550,830, 150, 30))
 save_button_rect = pygame.Rect((SCREEN_WIDTH - 300, 50, 200, 100))
+
+
 # Initialize systems
 gacha = GachaSystem()  # Initialize the Gacha system
 # Initialize the AI Battle system
@@ -94,7 +99,7 @@ except FileNotFoundError:
     print("Deck file not found")
 
 def end_game_screen(screen, message, game_state):
-    display_text(screen, message, 100, (255, 255, 255), (960, 450))
+    display_text(screen, message, 100, (255, 255, 255), (960, 200))
     pygame.display.flip()
     end = True
     while end:
@@ -117,8 +122,8 @@ def render_battle_screen(screen, player1, battle_bot, round, screen_width, scree
     battle_map = pygame.transform.scale(battle_map, (screen_width, screen_height))
     screen.blit(battle_map, (0, 0))
     
-    display_text(screen, f"P_HP {player1.hp} / 3000", 50, (255, 255, 255), (150, 450))
-    display_text(screen, f"B_HP {battle_bot.bot_hp} / 3000", 50, (255, 255, 255), (1700, 450))
+    display_text(screen, f" {player1.hp} / 3000", 50, (255, 255, 255), (170, 450))
+    display_text(screen, f"{battle_bot.bot_hp} / 3000", 50, (255, 255, 255), (1750, 450))
     display_text(screen, f"Round {round}", 100, (255, 255, 255), (960, 450))
     
     all_fields = [player1.deck, player1.field1, player1.field2, player1.field3, player1.field4,battle_bot.bot_field1, battle_bot.bot_field2, battle_bot.bot_field3, battle_bot.bot_field4]
@@ -258,7 +263,14 @@ def draw_message():
             screen.blit(text_surface, (SCREEN_WIDTH - 400, 50))
         else:
             message = ""  # Clear the message after 2 seconds
-
+def draw_stylized_text(text, font, main_color, shadow_color, pos, shadow_offset=(4, 4)):
+    # Render the shadow text first
+    shadow_text = font.render(text, True, shadow_color)
+    screen.blit(shadow_text, (pos[0] + shadow_offset[0], pos[1] + shadow_offset[1]))
+    
+    # Render the main text on top
+    main_text = font.render(text, True, main_color)
+    screen.blit(main_text, pos)
 pull_couse=100
 ten_pull_couse=1000
 tenshow=[]
@@ -276,6 +288,9 @@ start_x = 200
 start_y = 400  # Starting y position of the first row
 card_spacing = 10
 slots_per_row = 18
+
+
+
 def load_collected_cards():
     global  collected_cards
 
@@ -291,198 +306,7 @@ def load_collected_cards():
     return collected_cards,collected_cards2
 
 
-
-selected_card = None  # Stores currently selected card
-card_offset = (0, 0)  # Offset for dragging
-fixed_slots = []  # Stores fixed position slots
-placed_cards = {}  # Stores cards placed in each fixed slot
-deck_main = {}  # Stores initial deck from file
-
-# Define Save button
-
-
-
-
-def initialize_fixed_slots():
-    """Initialize the fixed position slots (10 slots)."""
-    global fixed_slots
-    fixed_slot_start_x = 320  # Starting x position for the fixed slots
-    fixed_slot_start_y = 50  # Starting y position for the fixed slots
-    fixed_slot_start_y2 = 220
-    fixed_slot_width = 120
-    fixed_slot_height = 160
-    fixed_slot_spacing = 10
-    fixed_slots_count = 10  # Total 10 slots
-
-    # Generate 10 fixed slots in the first row
-    for i in range(fixed_slots_count):
-        slot_x = fixed_slot_start_x + i * (fixed_slot_width + fixed_slot_spacing)
-        slot_y = fixed_slot_start_y
-        fixed_slots.append(pygame.Rect(slot_x, slot_y, fixed_slot_width, fixed_slot_height))
-    # Generate 10 fixed slots in the second row
-    for i in range(fixed_slots_count):
-        slot_x = fixed_slot_start_x + i * (fixed_slot_width + fixed_slot_spacing)
-        slot_y = fixed_slot_start_y2
-        fixed_slots.append(pygame.Rect(slot_x, slot_y, fixed_slot_width, fixed_slot_height))
-
-initialize_fixed_slots()
-
-def update_deck_file():
-    """Update deck.txt file to reflect the current deck_cards state."""
-    with open("deck_replace.txt", "w") as file:
-        for card_name, count in deck_main.items():
-            for _ in range(count):
-                file.write(card_name + "\n")
-    print("Deck file updated.")
-
-def save_fixed_slots_to_file():
-    """Save the names of cards currently placed in fixed slots to deck_save.txt."""
-    with open("deck_save.txt", "w") as file:
-        for slot_index in sorted(placed_cards.keys()):
-            card_name = placed_cards[slot_index]
-            file.write(card_name + "\n")
-    print("Fixed slot cards saved to deck_save.txt")
-def draw_deck_page(screen, gacha, deck_cards):
-    """Draw the deck page with cards arranged in the lower grid and handle card selection, dragging, and snapping."""
-    global selected_card, card_offset
-    card_width = 100
-    card_height = 130
-    deck_start_x = 300
-    deck_start_y = 400  # Starting y position for the deck cards
-    card_spacing = 10
-    slots_per_row = 12
-
-
-
-    # Draw deck slots in a 3-row grid (lower section)
-    for row in range(3):
-        for i in range(slots_per_row):
-            slot_x = deck_start_x + i * (card_width + card_spacing)
-            slot_y = deck_start_y + row * (card_height + card_spacing)
-            slot_rect = pygame.Rect(slot_x, slot_y, card_width, card_height)
-            pygame.draw.rect(screen, (255, 255, 255), slot_rect)
-            pygame.draw.rect(screen, (200, 200, 200), slot_rect, 2)
-
-    # Draw fixed slots in the upper section
-    for slot_rect in fixed_slots:
-        pygame.draw.rect(screen, (255, 255, 255), slot_rect)
-        pygame.draw.rect(screen, (200, 200, 200), slot_rect, 2)
-
-    # Display cards in fixed slots if placed
-    for slot_index, card_name in placed_cards.items():
-        for card in gacha.cards:
-            if card.name == card_name:
-                slot_rect = fixed_slots[slot_index]
-                card_image = pygame.transform.smoothscale(card.image, (120, 160))
-                screen.blit(card_image, (slot_rect.x, slot_rect.y))
-                break
-
-    # Display deck cards in the lower section and handle dragging
-    card_hit_boxes = []  # List of tuples (rect, card_name)
-    card_position = 0
-
-    for card_name in list(deck_cards.keys()):  # Iterate over a copy to modify deck_cards in-place
-        row = card_position // slots_per_row
-        col = card_position % slots_per_row
-
-        if row < 3:
-            for card in gacha.cards:
-                if card.name == card_name:
-                    # Calculate initial position
-                    card_x = deck_start_x + col * (card_width + card_spacing)
-                    card_y = deck_start_y + row * (card_height + card_spacing)
-
-                    # Highlight selected card for dragging
-                    if selected_card == card_name:
-                        mouse_x, mouse_y = pygame.mouse.get_pos()
-                        card_x, card_y = mouse_x - card_offset[0], mouse_y - card_offset[1]
-
-                    # Draw card
-                    card_rect = pygame.Rect(card_x, card_y, card_width, card_height)
-                    card_hit_boxes.append((card_rect, card_name))
-                    
-                    card_image = pygame.transform.smoothscale(card.image, (card_width, card_height))
-                    screen.blit(card_image, (card_x, card_y))
-
-                    # Draw card count if > 1
-                    count = deck_cards[card_name]
-                    if count > 1:
-                        count_font = pygame.font.Font(None, 24)
-                        count_text = count_font.render(f"x{count}", True, (255, 255, 255))
-                        count_rect = count_text.get_rect(bottomright=(card_x + card_width - 5, 
-                                                                      card_y + card_height - 5))
-                        shadow_text = count_font.render(f"x{count}", True, (0, 0, 0))
-                        screen.blit(shadow_text, (count_rect.x + 1, count_rect.y + 1))
-                        screen.blit(count_text, count_rect)
-
-                    card_position += 1
-                    break
-
-    # Handle card selection, dragging, and snapping to fixed slots
-    if pygame.mouse.get_pressed()[0]:  # Left click for selecting or dragging
-        mouse_pos = pygame.mouse.get_pos()
-        if not selected_card:
-            # Start dragging if a card is clicked in the deck or fixed slots
-            for card_rect, card_name in card_hit_boxes:
-                if card_rect.collidepoint(mouse_pos):
-                    selected_card = card_name
-                    card_offset = (mouse_pos[0] - card_rect.x, mouse_pos[1] - card_rect.y)
-                    break
-            # Check if a card in fixed slots is clicked
-            for slot_index, card_name in placed_cards.items():
-                slot_rect = fixed_slots[slot_index]
-                if slot_rect.collidepoint(mouse_pos):
-                    selected_card = card_name
-                    card_offset = (mouse_pos[0] - slot_rect.x, mouse_pos[1] - slot_rect.y)
-                    # Remove the card from placed slots and add it back to deck
-                    deck_cards[selected_card] = deck_cards.get(selected_card, 0) + 1
-                   
-                    del placed_cards[slot_index]
-                    update_deck_file()  # Update file after adding card back to deck
-                    break
-    else:
-        # On mouse release, snap to the nearest fixed slot if applicable
-        if selected_card:
-            mouse_pos = pygame.mouse.get_pos()
-            for slot_index, slot_rect in enumerate(fixed_slots):
-                if slot_rect.collidepoint(mouse_pos) and slot_index not in placed_cards:
-                    # Place card in slot and update deck count
-                    placed_cards[slot_index] = selected_card
-                    deck_cards[selected_card] -= 1
-                    
-                    if deck_cards[selected_card] <= 0:
-                        del deck_cards[selected_card]
-
-                    update_deck_file()  # Update file after placing card in fixed slot
-
-                    
-                    break
-      
-            selected_card = None  # Deselect card after placing
-
-    return card_hit_boxes
-
-
-
-
-
-def load_deck():
-    """Load deck from file and count unique cards."""
-    global deck_main
-    deck_main = {}
-    try:
-        with open("deck_replace.txt", "r") as file:
-            for line in file:
-                card_name = line.strip()
-                if card_name in deck_main:
-                    deck_main[card_name] += 1
-                else:
-                    deck_main[card_name] = 1
-    except FileNotFoundError:
-        print("Deck file not found")
-    return deck_main
-
-
+import pygame
 
 
     
@@ -528,7 +352,9 @@ def draw_collection_page(screen, gacha, collected_card_names, bg_col,  page_numb
                                 card_height - 2 * inner_padding))
     
     # Draw the navigation button with appropriate text
-    
+deck_manager = DeckManager()
+
+ 
 def check_if_card_exists(card_name, file_path):
     """Check if a card name already exists in the collection file"""
     try:
@@ -545,7 +371,10 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
+            if save_button_rect.collidepoint(event.pos):
+                    deck_manager.save_fixed_slots_to_file()
             if game_state == HOME:
+                
                 if battle_button_rect.collidepoint(event.pos):
                     game_state = BATTLE
                 elif deck_button_rect.collidepoint(event.pos):
@@ -666,9 +495,7 @@ while running:
             elif game_state == COLLECTION2:
                 if next_button_rect.collidepoint(event.pos):
                     game_state = COLLECTION
-            elif game_state == DECK:
-                if save_button_rect.collidepoint(event.pos):
-                    save_fixed_slots_to_file()
+            
                
                 
             
@@ -680,16 +507,34 @@ while running:
         screen.blit(background_img, (150, 0))
         
 
+        main_color=(255, 215, 0)
+        # for bubble in bubbles:
+        #             bubble.update()
+        #             bubble.draw(screen)
+
+        
+
+        drop_color=(0, 0, 0)
+        draw_stylized_text( "START MASTER DUEL" , font_coin1,main_color, drop_color,(400,100), shadow_offset=(6, 4))
         mouse_pos = pygame.mouse.get_pos()
         draw_button(battle_button_rect, "Battle", battle_button_rect.collidepoint(mouse_pos))
         draw_button(deck_button_rect, "Deck", deck_button_rect.collidepoint(mouse_pos))
         draw_button(gacha_button_rect, "Gacha", gacha_button_rect.collidepoint(mouse_pos))
         draw_button(collection_button_rect, "Collection", collection_button_rect.collidepoint(mouse_pos))
 
+
+
+        
+
+
+
     elif game_state == BATTLE:
         battle_map = pygame.image.load("background/battle.jpg")
         battle_map = pygame.transform.scale(battle_map, (SCREEN_WIDTH, SCREEN_HEIGHT))
         screen.blit(battle_map, (0, 0))
+
+       
+
 
         def location_click_card(mouse_x,mouse_y):
             if 450 <= mouse_x <= 570 and 730 <= mouse_y <= 890:
@@ -787,9 +632,15 @@ while running:
         round = 1
         check_end = True
         while round <= 10 and check_end:
+            
             player1.continue_play = True
             while player1.continue_play:
                 render_battle_screen(screen, player1, battle_bot, round, SCREEN_WIDTH, SCREEN_HEIGHT)
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_ESCAPE]:
+                    game_state = end_game_screen(screen, "Lose", HOME)
+                    check_end = False
+                    print(game_state)
 
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -843,7 +694,18 @@ while running:
             continue_play_select_card = True
             deck_select_card = []
             bot_select_card = []  
-            RED = (255, 0, 0)
+            def blink_color():
+                color = [(255, 0, 0), (0, 255, 0)]
+                blink = 0
+                blink_time = 0
+                current_time = pygame.time.get_ticks()
+                if current_time - blink_time > 500:
+                    blink_time = current_time
+                    blink = (blink + 1) % 2
+                return color[blink]
+            RED = blink_color()
+            
+
             all_player_field = [player1.field1, player1.field2, player1.field3, player1.field4]
             all_bot_field = [battle_bot.bot_field1, battle_bot.bot_field2, battle_bot.bot_field3, battle_bot.bot_field4]
             
@@ -968,7 +830,7 @@ while running:
                                             if event.key == pygame.K_RETURN:  # K_RETURN คือปุ่ม Enter
                                                 next_turn = False
                                 player1.hp, battle_bot.bot_hp = my_process_battle.process_battle(player_defender, bot_attacker, player1.hp, battle_bot.bot_hp, player1.tome, battle_bot.tome)
-                
+            keys = pygame.key.get_pressed()   
             # การเช็คเงื่อนไขการจบเกม
             if player1.hp <= 0 and battle_bot.bot_hp <= 0:
                 game_state = end_game_screen(screen, "Draw", HOME)
@@ -982,6 +844,7 @@ while running:
             elif player1.hp >= 0 and battle_bot.bot_hp >= 0 and round == 9:
                 game_state = end_game_screen(screen, "Draw", HOME)
                 check_end = False
+            
 
             
 
@@ -1022,8 +885,8 @@ while running:
         draw_button(save_button_rect, "Save", save_button_rect.collidepoint(mouse_pos))
     
     # โหลดและแสดงการ์ดในเด็ค
-        deck_main = load_deck()
-        draw_deck_page(screen, gacha, deck_main)
+        deck_cards = deck_manager.load_deck()  
+        deck_manager.draw_deck_page(screen, gacha, deck_cards)
     
     # ถ้ามีการ์ดที่ถูกเลือก ให้แสดงภาพพรีวิว
         

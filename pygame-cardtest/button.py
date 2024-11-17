@@ -1,42 +1,39 @@
+
 import pygame
-
-
+import sys
 class Button:
-    def __init__(self, position, size, clr=[100, 100, 100], cngclr=None, func=None, text='', font="Segoe Print", font_size=16, font_clr=[0, 0, 0]):
-        self.clr    = clr
-        self.size   = size
-        self.func   = func
-        self.surf   = pygame.Surface(size)
-        self.rect   = self.surf.get_rect(center=position)
+    def __init__(self, x, y, normal_image_path, hover_image_path):
+        """
+        Initialize the Button object.
 
-        if cngclr:
-            self.cngclr = cngclr
-        else:
-            self.cngclr = clr
-
-        if len(clr) == 4:
-            self.surf.set_alpha(clr[3])
-
-
-        self.font = pygame.font.SysFont(font, font_size)
-        self.txt = text
-        self.font_clr = font_clr
-        self.txt_surf = self.font.render(self.txt, 1, self.font_clr)
-        self.txt_rect = self.txt_surf.get_rect(center=[wh//2 for wh in self.size])
+        :param x: X-coordinate of the button.
+        :param y: Y-coordinate of the button.
+        :param normal_image_path: Path to the normal state image.
+        :param hover_image_path: Path to the hover state image.
+        """
+        self.normal_image = pygame.image.load(normal_image_path)
+        self.hover_image = pygame.image.load(hover_image_path)
+        self.rect = self.normal_image.get_rect(topleft=(x, y))
 
     def draw(self, screen):
-        self.mouseover()
+        """
+        Draw the button on the screen.
 
-        self.surf.fill(self.curclr)
-        self.surf.blit(self.txt_surf, self.txt_rect)
-        screen.blit(self.surf, self.rect)
+        :param screen: The Pygame screen to draw the button on.
+        """
+        mouse_pos = pygame.mouse.get_pos()
+        if self.rect.collidepoint(mouse_pos):
+            screen.blit(self.hover_image, self.rect)
+        else:
+            screen.blit(self.normal_image, self.rect)
 
-    def mouseover(self):
-        self.curclr = self.clr
-        pos = pygame.mouse.get_pos()
-        if self.rect.collidepoint(pos):
-            self.curclr = self.cngclr
+    def is_clicked(self, event):
+        """
+        Check if the button is clicked.
 
-    def call_back(self, *args):
-        if self.func:
-            return self.func(*args)
+        :param event: Pygame event object.
+        :return: True if clicked, False otherwise.
+        """
+        if event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos):
+            return True
+        return False

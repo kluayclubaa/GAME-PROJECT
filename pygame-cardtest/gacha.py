@@ -35,7 +35,7 @@ class GachaSystem:
         self.pull_count = 0
 
     def pull(self):
-        """Simulate a gacha pull."""
+        
         rarity_probabilities = {
             "Common": 60,
             "Rare": 25,
