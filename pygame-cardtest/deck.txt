@@ -73,6 +73,7 @@ Isuna
 Hibani
 Hibani
 Kazuma
+<<<<<<< Updated upstream
 Kazuma
 Hibani
 Shubaru yamato
@@ -98,3 +99,14 @@ Kazuma
 Shizuo Valkyria
 Shubaru yamato
 Hibani
+=======
+Hibani
+Kazuma
+Shubaru yamato
+Hibani
+Hibani
+Shubaru yamato
+Shizuo Valkyria
+Hibani
+Gaia Theyggdrasill
+>>>>>>> Stashed changes

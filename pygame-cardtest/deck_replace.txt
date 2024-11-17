@@ -1,5 +1,11 @@
 Hibani
 Kazuma
+Kazuma
+Kazuma
+Hibani
+Hibani
+Hibani
+Hibani
 Hibani
 Hibani
 Rin shirozaki
@@ -15,6 +21,7 @@ Shubaru yamato
 Himego Kanade
 Marry Eternalblood
 Marry Eternalblood
+<<<<<<< Updated upstream
 Kazuma
 Hibani
 Isuna
@@ -98,3 +105,16 @@ Kazuma
 Shizuo Valkyria
 Shubaru yamato
 Hibani
+=======
+Traisy o' Reapper
+Traisy o' Reapper
+Traisy o' Reapper
+Shizuo Valkyria
+Shizuo Valkyria
+Hibaki yamanashi
+Rin shirozaki
+Rin shirozaki
+Shubaru yamato
+Shubaru yamato
+Jibrili
+>>>>>>> Stashed changes
