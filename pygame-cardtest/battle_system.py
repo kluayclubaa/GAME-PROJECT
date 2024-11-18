@@ -107,3 +107,60 @@ class Process_battle:
                     player_field.clear()
 
                 return player_hp, bot_hp
+
+class Picture:
+    def __init__(self, position, image,power):
+        self.image = image
+        self.rect = self.image.get_rect(topleft=position)
+        self.position = position
+        self.target_position = [(480, 502),(767, 502),(1052, 502),(1342, 502)]  
+        self.start_position = position  
+        self.dragging = False  
+        self.placed = False
+        self.power = power
+
+    def draw(self, screen):
+        screen.blit(self.image, self.rect.topleft)
+
+    def check_click(self, mouse_position):
+        if self.rect.collidepoint(mouse_position):
+            return True
+    
+    def start_drag(self):
+        if not self.placed:
+            self.dragging = True
+    
+    def stop_drag(self,player,location_click):
+        player1 = player
+        self.dragging = False
+        i = 0
+        for target_position in self.target_position:
+            distance_to_target = pygame.math.Vector2(self.position[0] - target_position[0], self.position[1] - target_position[1]).length()
+            if distance_to_target <= 100:
+                self.position = target_position
+                self.rect.topleft = self.position  # อัพเดตตำแหน่งจริงใน rect
+                self.image = pygame.transform.smoothscale(self.image, (90,120))
+                self.placed = True
+                if i == 0:
+                    player1.field1.append(player1.deck[location_click])
+                elif i == 1:
+                    player1.field2.append(player1.deck[location_click])
+                elif i == 2:
+                    player1.field3.append(player1.deck[location_click])
+                elif i == 3:
+                    player1.field4.append(player1.deck[location_click])
+                player1.deck.remove(player1.deck[location_click])
+                player1.update_deck_positions()
+                player1.continue_play = not player1.continue_play
+                break
+            i += 1
+        else:
+               
+            self.position = self.start_position
+            self.rect.topleft = self.position
+
+    def update(self, mouse_pos):
+        if self.dragging:
+            # หากลากภาพ, อัพเดตตำแหน่ง
+            self.position = mouse_pos
+            self.rect.topleft = self.position
