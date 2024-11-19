@@ -10,6 +10,7 @@ from battle_system import battle_storage
 from battle_system import Bot_stat
 from battle_system import Process_battle
 from battle_system import Picture
+from button import Button
 
 
 # Initialize pygame
@@ -64,7 +65,7 @@ Ten_pills_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 800,
 next_button_rect = pygame.Rect((1550,830, 150, 30))
 save_button_rect = pygame.Rect((SCREEN_WIDTH - 300, 50, 200, 100))
 
-
+# playButton=Button(600,300,screen,"gacha","gacha_hover",300,100)
 # Initialize systems
 gacha = GachaSystem()  # Initialize the Gacha system
 # Initialize the AI Battle system
@@ -99,9 +100,7 @@ except FileNotFoundError:
     print("Deck file not found")
 
 def end_game_screen(screen, message, game_state):
-    screen.fill((255,255,255))
-    display_text(screen, message, 100, (0, 0, 0), (960, 350))
-    display_text(screen, "Press Enter to return to the main screen.", 100, (0, 0, 0), (960, 450))
+    display_text(screen, message, 100, (255, 255, 255), (960, 200))
     pygame.display.flip()
     end = True
     while end:
@@ -435,9 +434,9 @@ while running:
                     coin -= 1000
                     current_card_index = 0  # Reset card index for new pulls
                     
-            elif game_state == WHEN_PULLED:
-                if exit_button_rect.collidepoint(event.pos):
-                    game_state = GACHA
+            # elif game_state == WHEN_PULLED:
+            #     if exit_button_rect.collidepoint(event.pos):
+            #         game_state = GACHA
                 elif plus_button_rect.collidepoint(event.pos):
                     code_active = True
                 elif pull_button_rect.collidepoint(event.pos) and coin >= pull_couse:
@@ -487,10 +486,10 @@ while running:
                 if event.button == 1:
                     current_card_index += 1
                     if current_card_index >= len(tenshow):
-                        game_state = WHEN_PULLED
+                        game_state = GACHA
             elif game_state == SHOW_STATE:
                 if event.button == 1:
-                    game_state = WHEN_PULLED
+                    game_state = GACHA
             elif game_state == COLLECTION:
                 if next_button_rect.collidepoint(event.pos):
                     game_state = COLLECTION2
@@ -554,7 +553,62 @@ while running:
             elif 1350 <= mouse_x <= 1470 and 730 <= mouse_y <= 890:
                 return 6
         
-        
+        class Picture:
+            def __init__(self, position, image,power):
+                self.image = image
+                self.rect = self.image.get_rect(topleft=position)
+                self.position = position
+                self.target_position = [(480, 502),(767, 502),(1052, 502),(1342, 502)]  
+                self.start_position = position  
+                self.dragging = False  
+                self.placed = False
+                self.power = power
+
+            def draw(self, screen):
+                screen.blit(self.image, self.rect.topleft)
+
+            def check_click(self, mouse_position):
+                if self.rect.collidepoint(mouse_position):
+                    return True
+    
+            def start_drag(self):
+                if not self.placed:
+                    self.dragging = True
+    
+            def stop_drag(self,player):
+                player1 = player
+                self.dragging = False
+                i = 0
+                for target_position in self.target_position:
+                    distance_to_target = pygame.math.Vector2(self.position[0] - target_position[0], self.position[1] - target_position[1]).length()
+                    if distance_to_target <= 100:
+                        self.position = target_position
+                        self.rect.topleft = self.position  # อัพเดตตำแหน่งจริงใน rect
+                        self.image = pygame.transform.smoothscale(self.image, (90,120))
+                        self.placed = True
+                        if i == 0:
+                            player1.field1.append(player1.deck[location_click])
+                        elif i == 1:
+                            player1.field2.append(player1.deck[location_click])
+                        elif i == 2:
+                            player1.field3.append(player1.deck[location_click])
+                        elif i == 3:
+                            player1.field4.append(player1.deck[location_click])
+                        player1.deck.remove(player1.deck[location_click])
+                        player1.update_deck_positions()
+                        player1.continue_play = not player1.continue_play
+                        break
+                    i += 1
+                else:
+               
+                    self.position = self.start_position
+                    self.rect.topleft = self.position
+
+            def update(self, mouse_pos):
+                if self.dragging:
+                    # หากลากภาพ, อัพเดตตำแหน่ง
+                    self.position = mouse_pos
+                    self.rect.topleft = self.position
         battle_bot = Bot_stat()
         player1 = Player_stat()
         new_width, new_height = 120, 160
@@ -608,7 +662,7 @@ while running:
 
                     elif event.type == pygame.MOUSEBUTTONUP and location_click is not None:
                         if location_click < len(player1.deck):
-                            player1.deck[location_click].stop_drag(player1,location_click)
+                            player1.deck[location_click].stop_drag(player1)
                         location_click = None
             
                 # อัพเดตตำแหน่งของภาพ
@@ -787,7 +841,6 @@ while running:
                 check_end = False
             elif battle_bot.bot_hp <= 0:
                 game_state = end_game_screen(screen, "Win", HOME)
-                coin += 1000
                 check_end = False
             elif player1.hp >= 0 and battle_bot.bot_hp >= 0 and round == 9:
                 game_state = end_game_screen(screen, "Draw", HOME)
@@ -901,19 +954,6 @@ while running:
         if keys[pygame.K_ESCAPE]:
              game_state = HOME
             
-    elif game_state == WHEN_PULLED:
-        resize_gacha_background=pygame.transform.scale(gacha_background,(SCREEN_WIDTH-150,SCREEN_HEIGHT))
-        screen.blit(resize_gacha_background,(75,0))
-        draw_button(exit_button_rect, "Exit", exit_button_rect.collidepoint(mouse_pos))
-        draw_button(pull_button_rect, "Pull", pull_button_rect.collidepoint(mouse_pos))
-        draw_button(Ten_pills_button_rect, "10 Pulls", Ten_pills_button_rect.collidepoint(mouse_pos))
-        draw_coin_box(coin)
-        if code_active:
-            draw_code_input_box()
-        draw_message()
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_ESCAPE]:
-            game_state = HOME
 
     elif game_state == SHOW_STATE:
         resize_show_card=pygame.transform.scale(pulled_card.show,(1550,900))
@@ -921,7 +961,7 @@ while running:
         screen.blit(resize_show_card, (180, 0))
         keys = pygame.key.get_pressed()
         if keys[pygame.K_BACKSPACE]:
-            game_state = WHEN_PULLED
+            game_state = GACHA
     elif game_state == SHOWTEN_STATE:
        
         if tenshow:
@@ -932,7 +972,7 @@ while running:
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_BACKSPACE]:
-            game_state = WHEN_PULLED
+            game_state = GACHA
 
 
     

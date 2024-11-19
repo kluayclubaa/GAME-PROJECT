@@ -50,7 +50,7 @@ class GachaSystem:
             return self.get_legendary_card()
         # Create a pool of cards based on rarity probabilities
         card_pool = [card for card in self.cards for _ in range(rarity_probabilities[card.rarity])]
-        # Randomly choose a card from the pool
+        
         pull_card = random.choice(card_pool)
 
         if pull_card.rarity !="Legendary":
