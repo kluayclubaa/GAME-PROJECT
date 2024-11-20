@@ -16,7 +16,7 @@ from button import Button
 # Initialize pygame
 pygame.init()
 
-# ConstantsS
+# Constants
 SCREEN_WIDTH, SCREEN_HEIGHT = 1920, 900
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -55,19 +55,17 @@ font_coin1=pygame.font.Font(pygame.font.match_font('MN Pu Khem'),128)
 
 # Button setup
 button_width, button_height = 400, 50
-
+battle_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 500, button_width, button_height))
+deck_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 600, button_width, button_height))
+gacha_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 700, button_width, button_height))
 exit_button_rect = pygame.Rect((1300, 800, button_width, button_height))
 pull_button_rect = pygame.Rect((200, 800, button_width, button_height))
-
+collection_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 800, button_width, button_height))
 Ten_pills_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 800, button_width, button_height))
 next_button_rect = pygame.Rect((1550,830, 150, 30))
 save_button_rect = pygame.Rect((SCREEN_WIDTH - 300, 50, 200, 100))
 
-
-playButton = Button(600, 300, "button/PlayHover.png", "button/Play.png", 250, 150)
-DeckButton=Button(1000,300,"button/DeckHover.png","button/Deck.png",250,150)
-GachaButton=Button(600,600,"button/GachaHover.png","button/Gacha.png",250,150)
-CollectionButton=Button(1000,600,"button/CollectionHover.png","button/Collection.png",250,150)
+# playButton=Button(600,300,screen,"gacha","gacha_hover",300,100)
 # Initialize systems
 gacha = GachaSystem()  # Initialize the Gacha system
 # Initialize the AI Battle system
@@ -102,9 +100,7 @@ except FileNotFoundError:
     print("Deck file not found")
 
 def end_game_screen(screen, message, game_state):
-    screen.fill((255,255,255))
-    display_text(screen, message, 100, (0, 0, 0), (960, 350))
-    display_text(screen, "Press Enter to return to the main screen.", 100, (0, 0, 0), (960, 450))
+    display_text(screen, message, 100, (255, 255, 255), (960, 200))
     pygame.display.flip()
     end = True
     while end:
@@ -116,7 +112,6 @@ def end_game_screen(screen, message, game_state):
                 if event.key == pygame.K_RETURN:  # K_RETURN คือปุ่ม Enter
                     end = False
                     return game_state
-                
 def display_text(screen, text, font_size, color, position):
         font = pygame.font.Font(None, font_size)
         text_surface = font.render(text, True, color)
@@ -124,7 +119,6 @@ def display_text(screen, text, font_size, color, position):
         screen.blit(text_surface, text_rect)
 
 def render_battle_screen(screen, player1, battle_bot, round, screen_width, screen_height):
-    
     battle_map = pygame.image.load("background/battle_map.jpg")
     battle_map = pygame.transform.scale(battle_map, (screen_width, screen_height))
     screen.blit(battle_map, (0, 0))
@@ -177,6 +171,8 @@ def drawnext_button(rect, text, r=False):
     if r:
         color = NEXT_COLOR
 
+    
+    
     pygame.draw.rect(screen, color, rect, border_radius=12)
     text_render = font_coin.render(text, True, (255, 255, 255))  # White text
     screen.blit(text_render, (rect.x + (rect.width - text_render.get_width()) // 2, rect.y + (rect.height - text_render.get_height()) // 2))
@@ -268,7 +264,6 @@ def draw_message():
             screen.blit(text_surface, (SCREEN_WIDTH - 400, 50))
         else:
             message = ""  # Clear the message after 2 seconds
-
 def draw_stylized_text(text, font, main_color, shadow_color, pos, shadow_offset=(4, 4)):
     # Render the shadow text first
     shadow_text = font.render(text, True, shadow_color)
@@ -312,6 +307,10 @@ def load_collected_cards():
     return collected_cards,collected_cards2
 
 
+import pygame
+
+
+    
 def draw_collection_page(screen, gacha, collected_card_names, bg_col,  page_number):
     """Draw a single page of the collection"""
     # Draw background
@@ -377,14 +376,14 @@ while running:
                     deck_manager.save_fixed_slots_to_file()
             if game_state == HOME:
                 
-                if playButton.is_clicked(event):
+                if battle_button_rect.collidepoint(event.pos):
                     game_state = BATTLE
-                elif DeckButton.is_clicked(event):
+                elif deck_button_rect.collidepoint(event.pos):
                     game_state = DECK
-                elif GachaButton.is_clicked(event):
-                     game_state = GACHA
-                elif CollectionButton.is_clicked(event):
-                     game_state = COLLECTION
+                elif gacha_button_rect.collidepoint(event.pos):
+                    game_state = GACHA
+                elif collection_button_rect.collidepoint(event.pos):
+                    game_state = COLLECTION
             elif game_state == GACHA:
                 if exit_button_rect.collidepoint(event.pos):
                     game_state = HOME
@@ -435,7 +434,9 @@ while running:
                     coin -= 1000
                     current_card_index = 0  # Reset card index for new pulls
                     
-          
+            # elif game_state == WHEN_PULLED:
+            #     if exit_button_rect.collidepoint(event.pos):
+            #         game_state = GACHA
                 elif plus_button_rect.collidepoint(event.pos):
                     code_active = True
                 elif pull_button_rect.collidepoint(event.pos) and coin >= pull_couse:
@@ -508,17 +509,20 @@ while running:
         
 
         main_color=(255, 215, 0)
-       
+        # for bubble in bubbles:
+        #             bubble.update()
+        #             bubble.draw(screen)
+
         
 
         drop_color=(0, 0, 0)
-       
+        draw_stylized_text( "START MASTER DUEL" , font_coin1,main_color, drop_color,(400,100), shadow_offset=(6, 4))
         mouse_pos = pygame.mouse.get_pos()
-        playButton.draw(screen)
-        DeckButton.draw(screen)
-        GachaButton.draw(screen)
-        CollectionButton.draw(screen)
-        
+        draw_button(battle_button_rect, "Battle", battle_button_rect.collidepoint(mouse_pos))
+        draw_button(deck_button_rect, "Deck", deck_button_rect.collidepoint(mouse_pos))
+        draw_button(gacha_button_rect, "Gacha", gacha_button_rect.collidepoint(mouse_pos))
+        draw_button(collection_button_rect, "Collection", collection_button_rect.collidepoint(mouse_pos))
+
 
 
         
@@ -635,7 +639,9 @@ while running:
                 render_battle_screen(screen, player1, battle_bot, round, SCREEN_WIDTH, SCREEN_HEIGHT)
                 keys = pygame.key.get_pressed()
                 if keys[pygame.K_ESCAPE]:
-                   player1.hp=0
+                    game_state = end_game_screen(screen, "Lose", HOME)
+                    check_end = False
+                    print(game_state)
 
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -784,6 +790,8 @@ while running:
                             if player_defender != []:
                                 P_rect_x, P_rect_y, P_rect_width, P_rect_height = None, None, 100, 130
                                 B_rect_x, B_rect_y, B_rect_width, B_rect_height = None, None, 100, 130
+
+                                
                                 if bot_attacker == battle_bot.bot_field1:
                                     B_rect_x, B_rect_y = (475,280)
                                 elif bot_attacker == battle_bot.bot_field2:
@@ -792,6 +800,7 @@ while running:
                                     B_rect_x, B_rect_y = (1047,280)
                                 elif bot_attacker == battle_bot.bot_field4:
                                     B_rect_x, B_rect_y = (1337,280)
+
                                 if player_defender == player1.field1:
                                     P_rect_x, P_rect_y = (475,497)
                                 elif player_defender == player1.field2:
@@ -799,7 +808,8 @@ while running:
                                 elif player_defender == player1.field3:
                                     P_rect_x, P_rect_y = (1047,497)
                                 elif player_defender == player1.field4:
-                                    P_rect_x, P_rect_y = (1337,497)                               
+                                    P_rect_x, P_rect_y = (1337,497)
+                                
                                 next_turn = True
                                 while next_turn:
                                     BLUE = (0,0,255)
@@ -816,7 +826,6 @@ while running:
                                 player1.hp, battle_bot.bot_hp = my_process_battle.process_battle_B_P(player_defender, bot_attacker, player1.hp, battle_bot.bot_hp, player1.tome, battle_bot.tome)
             keys = pygame.key.get_pressed()   
             # การเช็คเงื่อนไขการจบเกม
-            
             if player1.hp <= 0 and battle_bot.bot_hp <= 0:
                 game_state = end_game_screen(screen, "Draw", HOME)
                 check_end = False
@@ -846,6 +855,19 @@ while running:
             else:
                 print("your deck is full")
             round += 1
+        
+
+            
+            
+            
+
+
+            
+
+
+
+
+
 
     elif game_state == DECK:
     # แสดงพื้นหลัง
@@ -870,6 +892,11 @@ while running:
 
     elif game_state == GACHA:
         screen.blit(pull_img, (150, 0))
+
+
+        
+       
+        
 
 
 
