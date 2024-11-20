@@ -11,19 +11,21 @@ class battle_card:
 class battle_storage:
     def __init__(self):
         self.storage = [
-            battle_card("Gaia Theyggdrasill",500,"collection\Gaia Theyggdrasill.png"),
-            battle_card("Hibaki yamanashi",500,"collection\Hibaki yamanashi.png"),
-            battle_card("Hibani",100,"collection\Hibani.png"),
-            battle_card("Himego Kanade",500,"collection\Himego Kanade.png"),
-            battle_card("Jibril",500,"collection\Jibril.png"),
-            battle_card("Kaguya Hime",500,"collection\Kaguya Hime.png"),
-            battle_card("Kazuma",100,"collection\Kazuma.png"),
-            battle_card("Marry Eternalblood",300,"collection\Marry Eternalblood.png"),
-            battle_card("Rin shirozaki",200,"collection\Rin shirozaki.png"),
-            battle_card("Shizuo Valkyria",300,"collection\Shizuo Valkyria.png"),
-            battle_card("Shubaru yamato",200,"collection\Shubaru yamato.png"),
-            battle_card("THE HAM",900,"collection\THE HAM.png"),
-            battle_card("Traisy o' Reapper",200,"collection\Traisy o' Reapper.png"),
+            battle_card("Gaia Theyggdrasill",500,"card\Gaia Theyggdrasill.png"),
+            battle_card("Hibaki yamanashi",500,"card\Hibaki yamanashi.png"),
+            battle_card("Hibani",100,"card\Hibani.png"),
+            battle_card("Himego Kanade",500,"card\Himego Kanade.png"),
+            battle_card("Jibril",500,"card\Jibril.png"),
+            battle_card("Kaguya Hime",500,"card\Kaguya Hime.png"),
+            battle_card("Kazuma",100,"card\Kazuma.png"),
+            battle_card("Marry Eternalblood",300,"card\Marry Eternalblood.png"),
+            battle_card("Rin shirozaki",200,"card\Rin shirozaki.png"),
+            battle_card("Shizuo Valkyria",300,"card\Shizuo Valkyria.png"),
+            battle_card("Shubaru yamato",200,"card\Shubaru yamato.png"),
+            battle_card("THE HAM",900,"card\THE HAM.png"),
+            battle_card("Traisy o' Reapper",200,"card\Traisy o' Reapper.png"),
+            battle_card("Heal",8888,"card\Heal.png"),
+            battle_card("DarkHole",9999,"card\DarkHole.png")
         ]
 
         self.deck_storage = []

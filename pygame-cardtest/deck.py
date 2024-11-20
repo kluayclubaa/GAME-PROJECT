@@ -84,7 +84,7 @@ class DeckManager:
             for card in gacha.cards:
                 if card.name == card_name:
                     slot_rect = self.fixed_slots[slot_index]
-                    card_image = pygame.transform.smoothscale(card.image, (120, 160))
+                    card_image = pygame.transform.smoothscale(card.card, (120, 160))
                     screen.blit(card_image, (slot_rect.x, slot_rect.y))
                     break
 
@@ -112,7 +112,7 @@ class DeckManager:
                         card_rect = pygame.Rect(card_x, card_y, card_width, card_height)
                         card_hit_boxes.append((card_rect, card_name))
                         
-                        card_image = pygame.transform.smoothscale(card.image, (card_width, card_height))
+                        card_image = pygame.transform.smoothscale(card.card, (card_width, card_height))
                         screen.blit(card_image, (card_x, card_y))
 
                         # Draw card count if > 1
