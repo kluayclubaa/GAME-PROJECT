@@ -504,7 +504,7 @@ while running:
 
     # Display home screen
     if game_state == HOME:
-        screen.blit(background_img, (150, 0))
+        screen.blit(background_img, (0, 0))
         
 
         main_color=(255, 215, 0)
