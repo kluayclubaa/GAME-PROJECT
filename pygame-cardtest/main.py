@@ -39,7 +39,8 @@ gacha_background=pygame.image.load('gacha background/1.jpg')
 show_rate=pygame.image.load('gacha background/background.png')
 bg_col=pygame.image.load('colbg/bg.png')
 deck_bg=pygame.image.load("background/deck.png")
-bgmusic=pygame.mixer.music.load('music/bgmusic.mp3')
+pygame.mixer.music.load("music/hopes.mp3")
+
 
 # Load the coin image
 coin_img = pygame.image.load('asset/coin.png')  # Path to your coin image
@@ -90,7 +91,8 @@ SHOWTEN_STATE="show_ten_State"
 WHENTEN_PULLED="when_ten_pulled"
 COLLECTION2="collection2"
 game_state = HOME
-
+if game_state == HOME:
+    pygame.mixer.music.play()
 clock = pygame.time.Clock()
 try:
     with open("deck.txt", "r") as file:
@@ -101,7 +103,9 @@ except FileNotFoundError:
     print("Deck file not found")
 
 def end_game_screen(screen, message, game_state):
-    display_text(screen, message, 100, (255, 255, 255), (960, 200))
+    screen.fill((255,255,255))
+    display_text(screen, message, 100, (0, 0, 0), (960, 350))
+    display_text(screen, "Press Enter to return to the main screen.", 100, (0, 0, 0), (960, 450))
     pygame.display.flip()
     end = True
     while end:
@@ -509,6 +513,7 @@ while running:
     if game_state == HOME:
         screen.blit(background_img, (0, 0))
         
+        
 
         main_color=(255, 215, 0)
        
@@ -525,13 +530,14 @@ while running:
 
 
         
-#kjkjkjkj
+
 
 
     elif game_state == BATTLE:
         battle_map = pygame.image.load("background/battle.jpg")
         battle_map = pygame.transform.scale(battle_map, (SCREEN_WIDTH, SCREEN_HEIGHT))
         screen.blit(battle_map, (10, 0))
+
 
        
 
@@ -638,9 +644,7 @@ while running:
                 render_battle_screen(screen, player1, battle_bot, round, SCREEN_WIDTH, SCREEN_HEIGHT)
                 keys = pygame.key.get_pressed()
                 if keys[pygame.K_ESCAPE]:
-                    game_state = end_game_screen(screen, "Lose", HOME)
-                    check_end = False
-                    print(game_state)
+                   player1.hp=0
 
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
