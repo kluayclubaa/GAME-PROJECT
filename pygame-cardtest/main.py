@@ -55,18 +55,18 @@ font_coin1=pygame.font.Font(pygame.font.match_font('MN Pu Khem'),128)
 
 # Button setup
 button_width, button_height = 400, 50
-battle_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 500, button_width, button_height))
-deck_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 600, button_width, button_height))
-gacha_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 700, button_width, button_height))
+
+
 exit_button_rect = pygame.Rect((1300, 800, button_width, button_height))
 pull_button_rect = pygame.Rect((200, 800, button_width, button_height))
-collection_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 800, button_width, button_height))
 Ten_pills_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 800, button_width, button_height))
 next_button_rect = pygame.Rect((1550,830, 150, 30))
 save_button_rect = pygame.Rect((SCREEN_WIDTH - 300, 50, 200, 100))
+playButton = Button(600, 300, "button/PlayHover.png", "button/Play.png", 250, 150)
+DeckButton=Button(1000,300,"button/DeckHover.png","button/Deck.png",250,150)
+GachaButton=Button(600,600,"button/GachaHover.png","button/Gacha.png",250,150)
+CollectionButton=Button(1000,600,"button/CollectionHover.png","button/Collection.png",250,150)
 
-# playButton=Button(600,300,screen,"gacha","gacha_hover",300,100)
-# Initialize systems
 gacha = GachaSystem()  # Initialize the Gacha system
 # Initialize the AI Battle system
 
@@ -376,14 +376,15 @@ while running:
                     deck_manager.save_fixed_slots_to_file()
             if game_state == HOME:
                 
-                if battle_button_rect.collidepoint(event.pos):
+                if playButton.is_clicked(event):
                     game_state = BATTLE
-                elif deck_button_rect.collidepoint(event.pos):
+                elif DeckButton.is_clicked(event):
                     game_state = DECK
-                elif gacha_button_rect.collidepoint(event.pos):
-                    game_state = GACHA
-                elif collection_button_rect.collidepoint(event.pos):
-                    game_state = COLLECTION
+                elif GachaButton.is_clicked(event):
+                     game_state = GACHA
+                elif CollectionButton.is_clicked(event):
+                     game_state = COLLECTION
+                    
             elif game_state == GACHA:
                 if exit_button_rect.collidepoint(event.pos):
                     game_state = HOME
@@ -509,19 +510,16 @@ while running:
         
 
         main_color=(255, 215, 0)
-        # for bubble in bubbles:
-        #             bubble.update()
-        #             bubble.draw(screen)
-
+       
         
 
         drop_color=(0, 0, 0)
-        draw_stylized_text( "START MASTER DUEL" , font_coin1,main_color, drop_color,(400,100), shadow_offset=(6, 4))
+       
         mouse_pos = pygame.mouse.get_pos()
-        draw_button(battle_button_rect, "Battle", battle_button_rect.collidepoint(mouse_pos))
-        draw_button(deck_button_rect, "Deck", deck_button_rect.collidepoint(mouse_pos))
-        draw_button(gacha_button_rect, "Gacha", gacha_button_rect.collidepoint(mouse_pos))
-        draw_button(collection_button_rect, "Collection", collection_button_rect.collidepoint(mouse_pos))
+        playButton.draw(screen)
+        DeckButton.draw(screen)
+        GachaButton.draw(screen)
+        CollectionButton.draw(screen)
 
 
 
