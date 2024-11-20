@@ -522,13 +522,13 @@ while running:
 
 
         
-
+#kjkjkjkj
 
 
     elif game_state == BATTLE:
         battle_map = pygame.image.load("background/battle.jpg")
         battle_map = pygame.transform.scale(battle_map, (SCREEN_WIDTH, SCREEN_HEIGHT))
-        screen.blit(battle_map, (0, 0))
+        screen.blit(battle_map, (10, 0))
 
        
 
