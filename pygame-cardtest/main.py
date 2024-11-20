@@ -15,7 +15,7 @@ from button import Button
 
 # Initialize pygame
 pygame.init()
-
+pygame.mixer.init()
 # Constants
 SCREEN_WIDTH, SCREEN_HEIGHT = 1920, 900
 WHITE = (255, 255, 255)
@@ -39,6 +39,7 @@ gacha_background=pygame.image.load('gacha background/1.jpg')
 show_rate=pygame.image.load('gacha background/background.png')
 bg_col=pygame.image.load('colbg/bg.png')
 deck_bg=pygame.image.load("background/deck.png")
+bgmusic=pygame.mixer.music.load('music/bgmusic.mp3')
 
 # Load the coin image
 coin_img = pygame.image.load('asset/coin.png')  # Path to your coin image
