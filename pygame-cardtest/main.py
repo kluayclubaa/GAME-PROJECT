@@ -727,14 +727,7 @@ while running:
                         battle_bot.bot_hp -= the_field[0].power
                     else:
                         while continue_play_select_card and the_field != []:
-                            if num == 0:
-                                P_rect_x, P_rect_y = (475,497)
-                            elif num == 1:    
-                                P_rect_x, P_rect_y = (762,497)
-                            elif num == 2:
-                                P_rect_x, P_rect_y = (1047,497)
-                            elif num == 3:
-                                P_rect_x, P_rect_y = (1337,497)
+                            P_rect_x,P_rect_y = player1.check_rect(num)
                             deck_select_card = the_field
                             render_battle_screen(screen, player1, battle_bot, round, SCREEN_WIDTH, SCREEN_HEIGHT)
                             if P_rect_x and P_rect_y and the_field != []:
@@ -751,8 +744,8 @@ while running:
                                     mouse_pos = pygame.mouse.get_pos()
                                     x_pos, y_pos = mouse_pos
                 
-                                    bot_select_card = battle_bot.check_got_click(x_pos,y_pos)
-                                    B_rect_x, B_rect_y = battle_bot.check_got_click_frame(x_pos,y_pos)
+                                    bot_select_card = battle_bot.check_got_click(x_pos,y_pos,the_field)
+                                    B_rect_x, B_rect_y = battle_bot.check_got_click_frame(x_pos,y_pos,bot_select_card)
 
                                     
 
@@ -764,7 +757,7 @@ while running:
                     
                     # คำนวนเลือด
                     if deck_select_card != [] and bot_select_card != []:
-                        player1.hp, battle_bot.bot_hp = my_process_battle.process_battle(deck_select_card, bot_select_card, player1.hp, battle_bot.bot_hp, player1.tome, battle_bot.tome)
+                        player1.hp, battle_bot.bot_hp = my_process_battle.process_battle_P_B(deck_select_card, bot_select_card, player1.hp, battle_bot.bot_hp, player1.tome, battle_bot.tome)
                 
             
             
@@ -830,7 +823,7 @@ while running:
                                         if event.type == pygame.KEYDOWN:
                                             if event.key == pygame.K_RETURN:  # K_RETURN คือปุ่ม Enter
                                                 next_turn = False
-                                player1.hp, battle_bot.bot_hp = my_process_battle.process_battle(player_defender, bot_attacker, player1.hp, battle_bot.bot_hp, player1.tome, battle_bot.tome)
+                                player1.hp, battle_bot.bot_hp = my_process_battle.process_battle_B_P(player_defender, bot_attacker, player1.hp, battle_bot.bot_hp, player1.tome, battle_bot.tome)
             keys = pygame.key.get_pressed()   
             # การเช็คเงื่อนไขการจบเกม
             if player1.hp <= 0 and battle_bot.bot_hp <= 0:
