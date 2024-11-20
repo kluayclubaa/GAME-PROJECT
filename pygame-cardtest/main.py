@@ -65,7 +65,10 @@ Ten_pills_button_rect = pygame.Rect((SCREEN_WIDTH // 2 - button_width // 2, 800,
 next_button_rect = pygame.Rect((1550,830, 150, 30))
 save_button_rect = pygame.Rect((SCREEN_WIDTH - 300, 50, 200, 100))
 
-# playButton=Button(600,300,screen,"gacha","gacha_hover",300,100)
+
+playButton = Button(600, 300, "button/PLAY_HOVER.png", "button/PLAY_canva.png", 350, 200)
+
+
 # Initialize systems
 gacha = GachaSystem()  # Initialize the Gacha system
 # Initialize the AI Battle system
@@ -119,6 +122,7 @@ def display_text(screen, text, font_size, color, position):
         screen.blit(text_surface, text_rect)
 
 def render_battle_screen(screen, player1, battle_bot, round, screen_width, screen_height):
+    
     battle_map = pygame.image.load("background/battle_map.jpg")
     battle_map = pygame.transform.scale(battle_map, (screen_width, screen_height))
     screen.blit(battle_map, (0, 0))
@@ -376,7 +380,7 @@ while running:
                     deck_manager.save_fixed_slots_to_file()
             if game_state == HOME:
                 
-                if battle_button_rect.collidepoint(event.pos):
+                if playButton.is_clicked(event):
                     game_state = BATTLE
                 elif deck_button_rect.collidepoint(event.pos):
                     game_state = DECK
@@ -509,16 +513,13 @@ while running:
         
 
         main_color=(255, 215, 0)
-        # for bubble in bubbles:
-        #             bubble.update()
-        #             bubble.draw(screen)
-
+       
         
 
         drop_color=(0, 0, 0)
         draw_stylized_text( "START MASTER DUEL" , font_coin1,main_color, drop_color,(400,100), shadow_offset=(6, 4))
         mouse_pos = pygame.mouse.get_pos()
-        draw_button(battle_button_rect, "Battle", battle_button_rect.collidepoint(mouse_pos))
+        playButton.draw(screen)
         draw_button(deck_button_rect, "Deck", deck_button_rect.collidepoint(mouse_pos))
         draw_button(gacha_button_rect, "Gacha", gacha_button_rect.collidepoint(mouse_pos))
         draw_button(collection_button_rect, "Collection", collection_button_rect.collidepoint(mouse_pos))
@@ -797,8 +798,6 @@ while running:
                             if player_defender != []:
                                 P_rect_x, P_rect_y, P_rect_width, P_rect_height = None, None, 100, 130
                                 B_rect_x, B_rect_y, B_rect_width, B_rect_height = None, None, 100, 130
-
-
                                 if bot_attacker == battle_bot.bot_field1:
                                     B_rect_x, B_rect_y = (475,280)
                                 elif bot_attacker == battle_bot.bot_field2:
@@ -807,7 +806,6 @@ while running:
                                     B_rect_x, B_rect_y = (1047,280)
                                 elif bot_attacker == battle_bot.bot_field4:
                                     B_rect_x, B_rect_y = (1337,280)
-
                                 if player_defender == player1.field1:
                                     P_rect_x, P_rect_y = (475,497)
                                 elif player_defender == player1.field2:
@@ -815,8 +813,7 @@ while running:
                                 elif player_defender == player1.field3:
                                     P_rect_x, P_rect_y = (1047,497)
                                 elif player_defender == player1.field4:
-                                    P_rect_x, P_rect_y = (1337,497)
-                                
+                                    P_rect_x, P_rect_y = (1337,497)                               
                                 next_turn = True
                                 while next_turn:
                                     BLUE = (0,0,255)
@@ -862,19 +859,6 @@ while running:
             else:
                 print("your deck is full")
             round += 1
-        
-
-            
-            
-            
-
-
-            
-
-
-
-
-
 
     elif game_state == DECK:
     # แสดงพื้นหลัง
@@ -899,11 +883,6 @@ while running:
 
     elif game_state == GACHA:
         screen.blit(pull_img, (150, 0))
-
-
-        
-       
-        
 
 
 
